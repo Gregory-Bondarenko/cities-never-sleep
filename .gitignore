@@ -1,0 +1,69 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+*.egg-info/
+.eggs/
+dist/
+build/
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.uv/
+
+# Data — large raw / interim rasters stay local (keep folder .gitkeep)
+data/raw/*
+!data/raw/.gitkeep
+data/interim/*
+!data/interim/.gitkeep
+data/manual/*
+!data/manual/.gitkeep
+
+# Allow small aggregated outputs under processed (csv/parquet/json)
+# but ignore accidental large dumps
+data/processed/**/*.tif
+data/processed/**/*.tiff
+data/processed/**/*.h5
+data/processed/**/*.hdf5
+data/processed/**/*.nc
+data/processed/**/*.zip
+data/processed/**/*.gz
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Node (web stub)
+web/node_modules/
+web/dist/
+web/.vite/
+
+# Notebooks checkpoints
+.ipynb_checkpoints/
+notebooks/.ipynb_checkpoints/
+analytics/notebooks/.ipynb_checkpoints/
+
+# Heavy analytics exports (keep small JSON/parquet committed intentionally)
+analytics/exports/**/*.tif
+analytics/exports/**/*.pmtiles
+!analytics/exports/.gitkeep
+
+# Secrets / credentials
+*.pem
+*.key
+credentials.json
+.earthdata_auth
+.netrc
