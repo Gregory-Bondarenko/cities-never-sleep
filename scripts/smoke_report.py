@@ -85,7 +85,8 @@ def to_markdown(report: dict) -> str:
     lines += [
         "",
         f"Население: {p['rows']} строк, {p['cities']} городов, "
-        f"{p['cities_2012_2024']} с данными за 2012–2024, строк с некорректным ОКТМО: {p['bad_oktmo']}",
+        f"{p['cities_2012_2024']} с данными за 2012–2024, "
+        f"строк с некорректным ОКТМО: {p['bad_oktmo']}",
     ]
     return "\n".join(lines) + "\n"
 
