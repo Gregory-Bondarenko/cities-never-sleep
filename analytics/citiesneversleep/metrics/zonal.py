@@ -25,6 +25,10 @@ from citiesneversleep.process.crop import SCALE_DIVISOR_UNTIL_YEAR
 KM_PER_DEG_LAT = 110.574
 KM_PER_DEG_LON_EQ = 111.320
 INT16_MAX = 32767
+# Общий порог для всех лет: до 2022 года значения хранились как int16 с делением на 10
+# и не превышают 3 276,7; с 2022 года предел в 10 раз выше. Без общего порога
+# крупные города искусственно растут в 2022 году (#10).
+HARMONIZED_CAP = INT16_MAX / 10
 NEAR_CAP_SHARE = 0.9  # значения выше 90% предела хранения считаются близкими к пределу
 NAN_FLAG_SHARE = 0.1
 RADIUS_FACTORS = {"r05": 0.5, "r1": 1.0, "r2": 2.0}
@@ -37,6 +41,7 @@ COLUMNS = [
     "sol",
     "sol_r05",
     "sol_r2",
+    "sol_unclipped",
     "lit_area_km2",
     "mean_radiance",
     "max_radiance",
@@ -93,9 +98,11 @@ def city_stats(
         inside = dist <= r_km * factor
         vals = data[inside]
         valid = np.isfinite(vals)
-        sol = float(np.sum(vals[valid] * area[inside][valid]))
+        clipped = np.minimum(vals[valid], HARMONIZED_CAP)
+        sol = float(np.sum(clipped * area[inside][valid]))
         out[{"r05": "sol_r05", "r1": "sol", "r2": "sol_r2"}[key]] = sol
         if key == "r1":
+            out["sol_unclipped"] = float(np.sum(vals[valid] * area[inside][valid]))
             n = int(inside.sum())
             lit = valid & (vals > 0)
             valid_area = float(area[inside][valid].sum())
@@ -146,7 +153,8 @@ def lights_meta_extra() -> dict:
     return {
         "boundary_method": BOUNDARY_METHOD,
         "radius_rule": "r = clip(1,5·√(N/10 000), 3, 30) км, N = population_latest (ADR-0005)",
-        "sol_definition": "Σ L·A внутри круга, L в нВт/см²/ср, A площадь пикселя в км²",
+        "sol_definition": "Σ min(L, cap)·A внутри круга, L в нВт/см²/ср, A площадь пикселя в км²",
+        "harmonized_cap": HARMONIZED_CAP,
         "near_cap_rule": f"L ≥ {NEAR_CAP_SHARE}·предел хранения (int16, /10 до "
         f"{SCALE_DIVISOR_UNTIL_YEAR})",
     }

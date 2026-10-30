@@ -4,6 +4,12 @@
 в относительное изменение за год: exp(β) − 1. Значимость проверяется
 тестом Манна–Кендалла с поправкой на совпадающие значения.
 Реализация на numpy, без дополнительных зависимостей.
+
+Классы яркости строятся по относительному ряду: логарифм яркости города
+минус национальный индекс (медиана по городам центрированных логарифмов
+за год). Так снимаются сдвиги, общие для всех городов, в том числе
+ступенька 2021 года в наборе VNL (ADR-0007). Класс «растёт» означает
+рост быстрее типичного города России.
 """
 
 from __future__ import annotations
@@ -83,6 +89,21 @@ def classify(trend: Trend) -> str:
     return "стабилен"
 
 
+def national_index(lights: pd.DataFrame, column: str = "sol") -> pd.Series:
+    """Национальный индекс яркости в логарифмах по годам (ADR-0007).
+
+    Для каждого города логарифм ряда центрируется по его среднему, затем по
+    каждому году берётся медиана по городам. Учитываются только города с
+    положительными значениями во все годы.
+    """
+    piv = lights.pivot(index="city_id", columns="year", values=column)
+    piv = piv[(piv > 0).all(axis=1)]
+    logs = np.log(piv.astype("float64"))
+    centered = logs.sub(logs.mean(axis=1), axis=0)
+    idx = centered.median(axis=0)
+    return idx - idx.iloc[0]
+
+
 def city_trends(lights: pd.DataFrame, population: pd.DataFrame) -> pd.DataFrame:
     """Тренды по каждому городу.
 
@@ -96,25 +117,33 @@ def city_trends(lights: pd.DataFrame, population: pd.DataFrame) -> pd.DataFrame:
     ]
     pop_by_city = dict(tuple(pop.groupby("city_id")))
 
+    index = np.exp(national_index(lights))
+    lights = lights.assign(sol_rel=lights["sol"] / lights["year"].map(index))
+    lights = lights.assign(
+        sol_r2_rel=lights["sol_r2"] / lights["year"].map(np.exp(national_index(lights, "sol_r2")))
+    )
+
     rows = []
     for city_id, g in lights.groupby("city_id"):
         g = g.sort_values("year")
-        t_all = log_trend(g["year"], g["sol"])
+        t_raw = log_trend(g["year"], g["sol"])
+        t_all = log_trend(g["year"], g["sol_rel"])
         pre = g[g["year"] <= SEAM_LAST_YEAR]
-        t_pre = log_trend(pre["year"], pre["sol"])
-        t_r2 = log_trend(g["year"], g["sol_r2"])
+        t_pre = log_trend(pre["year"], pre["sol_rel"])
+        t_r2 = log_trend(g["year"], g["sol_r2_rel"])
         p = pop_by_city.get(city_id)
         t_pop = log_trend(p["year"], p["population"]) if p is not None else NO_TREND
         rows.append(
             {
                 "city_id": city_id,
                 "n_years_lights": t_all.n,
-                "lights_pct_per_year": t_all.pct_per_year,
-                "lights_p_value": t_all.p_value,
+                "lights_rel_pct_per_year": t_all.pct_per_year,
+                "lights_rel_p_value": t_all.p_value,
                 "lights_class": classify(t_all),
-                "lights_pct_per_year_pre2022": t_pre.pct_per_year,
+                "lights_raw_pct_per_year": t_raw.pct_per_year,
+                "lights_rel_pct_per_year_pre2022": t_pre.pct_per_year,
                 "lights_class_pre2022": classify(t_pre),
-                "lights_pct_per_year_r2": t_r2.pct_per_year,
+                "lights_rel_pct_per_year_r2": t_r2.pct_per_year,
                 "n_years_population": t_pop.n,
                 "population_pct_per_year": t_pop.pct_per_year,
                 "population_p_value": t_pop.p_value,
@@ -166,6 +195,10 @@ def build_city_trends(dest_dir=None):
         n_rows=len(trends),
         license_note="VNL: CC-BY 4.0; Wikidata: CC0",
         method="наклон Сена по ln(ряда), тест Манна–Кендалла с поправкой на совпадения",
+        lights_class_basis="относительно национального индекса (ADR-0007)",
+        national_index={
+            int(k): round(float(v), 4) for k, v in np.exp(national_index(lights)).items()
+        },
         min_years=MIN_YEARS,
         alpha=ALPHA,
         stable_band_pct_per_year=STABLE_BAND * 100,
