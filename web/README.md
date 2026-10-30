@@ -1,7 +1,5 @@
-# web/ — витрина
+# web/: витрина
 
-Только визуализация итоговых артефактов из `data/processed/` и `analytics/exports/`.
+Только визуализация готовых артефактов из `data/processed/` и `analytics/exports/`. Расчёты метрик здесь запрещены ([ADR-0001](../docs/adr/0001-analytics-artifacts-web.md)).
 
-Тяжёлая аналитика здесь не живёт. Стек фронта (Vite, MapLibre, deck.gl и т.д.) — **proposal**, см. [docs/stack-proposal.md](../docs/stack-proposal.md).
-
-Заготовка каталогов `src/` и `public/` появится вместе с утверждением стека (ориентир — неделя 5 плана).
+Стек фронтенда (Vite, MapLibre, deck.gl и другие) пока на согласовании, см. [ADR-0004](../docs/adr/0004-stack.md). Каталоги `src/` и `public/` наполняются в вехе v0.6.0.

@@ -1,0 +1,31 @@
+name: Проблема с данными
+description: Ошибка, пропуск или смещение в данных и методике
+labels: ["type:data"]
+body:
+  - type: dropdown
+    id: dataset
+    attributes:
+      label: Набор
+      options:
+        - VNL (ночные огни)
+        - Население
+        - Границы городов
+        - Производные метрики
+        - Другое
+    validations:
+      required: true
+  - type: textarea
+    id: finding
+    attributes:
+      label: Что обнаружено
+      description: Факт с примером (город, год, значение)
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Влияние на результаты
+  - type: textarea
+    id: check
+    attributes:
+      label: Как проверить или исправить

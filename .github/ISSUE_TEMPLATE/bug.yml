@@ -1,0 +1,26 @@
+name: Ошибка
+description: Что-то работает не так, как описано
+labels: ["type:bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: Что произошло
+      description: Команда, ожидаемый и фактический результат
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Как воспроизвести
+      render: bash
+  - type: input
+    id: version
+    attributes:
+      label: Версия
+      description: Вывод `uv run cns version`
+  - type: textarea
+    id: logs
+    attributes:
+      label: Лог или трассировка
+      render: text
