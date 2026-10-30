@@ -143,3 +143,12 @@ def test_radius_km(pop, expected):
 def test_radius_km_series():
     r = radius_km(pd.Series([1_000_000, None]))
     assert r.tolist() == pytest.approx([15.0, R_MIN_KM])
+
+
+def test_excluded_cities_dropped():
+    df = rows_to_dataframe(
+        [_pop("Q165413", 39_000, "2018-01-01T00:00:00Z"), _pop("Q1", 100, "2018-01-01T00:00:00Z")]
+    )
+    assert set(df["city_id"]) == {"Q1"}
+    rows = [{"city": E + "Q165413", "cityLabel": "Байконур", "oktmo": "55000000"}]
+    assert cities_from_rows(rows, df).empty

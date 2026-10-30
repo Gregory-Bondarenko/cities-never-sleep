@@ -45,6 +45,11 @@ CITY_FILTER = """
 # проверяет класс по цепочке подклассов. С оптимизатором запрос начинался
 # с обхода всех подклассов «города» и падал по таймауту Wikidata.
 
+# Объекты с кодом ОКТМО, которые не являются территорией субъектов РФ (ADR-0006).
+EXCLUDED_CITIES = {
+    "Q165413": "Байконур: территория Республики Казахстан, арендованная Российской Федерацией",
+}
+
 # Ряд численности: каждое утверждение P1082 с рангом, датой (P585)
 # и способом определения (P459), чтобы выбрать одно значение на город и год.
 POPULATION_QUERY = (
@@ -207,6 +212,7 @@ def rows_to_dataframe(rows: list[dict]) -> pd.DataFrame:
     df["rank"] = _strip(df["rank"], RANK_PREFIX).str.replace("Rank", "").str.lower()
     df["rank"] = df["rank"].fillna("normal")
     df["method"] = _strip(df["method"], ENTITY_PREFIX)
+    df = df[~df["city_id"].isin(EXCLUDED_CITIES)]
     df = add_oktmo_status(df)
     df["population"] = pd.to_numeric(df["population"], errors="coerce")
     df["date"] = pd.to_datetime(df["date"], errors="coerce", utc=True)
@@ -233,6 +239,7 @@ def cities_from_rows(rows: list[dict], population: pd.DataFrame) -> pd.DataFrame
             df[col] = pd.NA
     df["coverage"] = df["coverage"].fillna("p17_russia")
     df["city_id"] = _strip(df["city_id"], ENTITY_PREFIX)
+    df = df[~df["city_id"].isin(EXCLUDED_CITIES)]
     df = add_oktmo_status(df)
     coords = df["coord"].astype("string").str.extract(_POINT)
     df["lat"] = pd.to_numeric(coords["lat"], errors="coerce")
@@ -288,6 +295,7 @@ def cities_meta(df: pd.DataFrame, *, fetched_at: str | None = None) -> dict:
         n_without_coords=int(df["lat"].isna().sum()) if len(df) else 0,
         n_without_population=int(df["population_latest"].isna().sum()) if len(df) else 0,
         coverage_counts=df["coverage"].value_counts().to_dict() if len(df) else {},
+        excluded=EXCLUDED_CITIES,
         query=CITIES_QUERY.strip(),
     )
 
