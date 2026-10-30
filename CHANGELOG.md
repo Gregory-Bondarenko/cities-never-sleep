@@ -16,6 +16,12 @@
 - Загрузчик населения городов РФ из Wikidata SPARQL с ОКТМО (`cns fetch-pop`) → parquet/csv в `data/processed/`.
 - Документация: README (рус.), `docs/data-sources.md`, `docs/stack-proposal.md` (стек не утверждён), CONTRIBUTING, минимальный CI.
 - SemVer `0.1.0-dev`, Keep a Changelog, ветки только через PR в `main`.
+- Тесты загрузчиков VNL и Wikidata на подменённом HTTP, тесты обрезки и нормализации шкалы на синтетическом растре; сетевые запросы в тестах заблокированы.
+- Workflow `network`: еженедельная и ручная проверка доступности Zenodo и Wikidata.
+
+### Changed
+
+- Обязательный CI больше не обращается к сети: только `ruff`, `pytest` и проверка CLI; зависимости ставятся строго по `uv.lock`.
 
 ## [0.1.0-dev] — 2026-10-29
 

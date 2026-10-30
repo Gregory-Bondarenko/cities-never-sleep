@@ -1,0 +1,32 @@
+name: network
+
+# Проверка доступности внешних источников (Zenodo, Wikidata).
+# Не входит в обязательные проверки PR: сбой внешнего сервиса не блокирует слияние.
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"  # понедельник, 09:17 МСК
+  workflow_dispatch:
+
+jobs:
+  sources:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Sync dependencies
+        run: uv sync --all-extras --frozen
+
+      - name: Zenodo VNL catalog
+        run: uv run cns fetch-vnl --dry-run --years 2012-2024
+
+      - name: Wikidata SPARQL
+        run: uv run cns fetch-pop --dry-run
