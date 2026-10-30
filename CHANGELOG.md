@@ -6,6 +6,10 @@
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-30
+
+Веха «Анализ»: тренды относительно городов сопоставимой яркости, флаг точечных источников, документ с выводами и выгрузка для витрины.
+
 ### Added
 
 - `docs/findings.md`: результаты первой версии, все числа воспроизводятся `scripts/findings.py`.
@@ -15,7 +19,6 @@
 ### Changed
 
 - Классы яркости строятся относительно городов той же децили медианной яркости (ADR-0008): по национальному индексу тусклые города систематически «росли», яркие «гасли». Новые столбцы `brightness_decile`, `lights_nat_pct_per_year`, `lights_class_national`; схема `city_trends` 1.1.0.
-- Версия в коде поднята до `0.4.0.dev0`.
 
 ## [0.3.0] - 2026-10-30
 
@@ -75,6 +78,7 @@
 - `CONTRIBUTING.md`: префиксы веток, Conventional Commits, squash merge, порядок релиза; исправлен путь к `__init__.py`.
 - `README.md`: навигация по документации, значок CI.
 
-[Unreleased]: https://github.com/Gregory-Bondarenko/cities-never-sleep/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/Gregory-Bondarenko/cities-never-sleep/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/Gregory-Bondarenko/cities-never-sleep/releases/tag/v0.4.0
 [0.3.0]: https://github.com/Gregory-Bondarenko/cities-never-sleep/releases/tag/v0.3.0
 [0.1.0]: https://github.com/Gregory-Bondarenko/cities-never-sleep/releases/tag/v0.1.0
