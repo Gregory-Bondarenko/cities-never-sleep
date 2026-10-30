@@ -62,6 +62,7 @@ docs/                 архитектура, методика, источник
 | Документ | О чём |
 |---|---|
 | [docs/architecture.md](docs/architecture.md) | слои, контракты артефактов, целевая модель данных |
+| [docs/findings.md](docs/findings.md) | результаты первой версии |
 | [docs/methodology.md](docs/methodology.md) | допущения и известные ограничения данных |
 | [docs/data-sources.md](docs/data-sources.md) | источники и лицензии |
 | [docs/roadmap.md](docs/roadmap.md) | вехи и версии |

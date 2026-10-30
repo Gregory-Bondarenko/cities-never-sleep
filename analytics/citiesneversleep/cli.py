@@ -53,13 +53,9 @@ def fetch_vnl(
         "--years",
         help="Диапазон или список лет, напр. 2012-2024 или 2013,2020",
     ),
-    year: int | None = typer.Option(
-        None, "--year", help="Один год (перекрывает --years)"
-    ),
+    year: int | None = typer.Option(None, "--year", help="Один год (перекрывает --years)"),
     force: bool = typer.Option(False, "--force", help="Перекачать, даже если файл есть"),
-    dry_run: bool = typer.Option(
-        False, "--dry-run", help="Только показать, что будет скачано"
-    ),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Только показать, что будет скачано"),
 ) -> None:
     """Скачать годовые VNL COG с Zenodo (OpenGeoHub, record 17294744)."""
     selected = _resolve_years(years, year)
@@ -85,9 +81,7 @@ def fetch_vnl(
 
 @app.command("fetch-pop")
 def fetch_pop(
-    dry_run: bool = typer.Option(
-        False, "--dry-run", help="Проверить SPARQL, не писать файлы"
-    ),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Проверить SPARQL, не писать файлы"),
 ) -> None:
     """Скачать население и справочник городов РФ из Wikidata SPARQL."""
     from citiesneversleep.sources.wikidata_pop import (
@@ -119,9 +113,7 @@ def process_vnl(
         "--no-scale-fix",
         help="Не делить 2012–2021 на 10 (оставить как в файле)",
     ),
-    dry_run: bool = typer.Option(
-        False, "--dry-run", help="Проверить наличие сырых файлов"
-    ),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Проверить наличие сырых файлов"),
 ) -> None:
     """Обрезать скачанные VNL по bbox России (+ Чукотка)."""
     from citiesneversleep.process.crop import crop_years, find_raw_for_year
@@ -175,6 +167,16 @@ def pd_crosstab(df) -> str:
     import pandas as pd
 
     return pd.crosstab(df["lights_class"], df["population_class"], margins=True).to_string()
+
+
+@app.command("export-web")
+def export_web() -> None:
+    """Выгрузка для витрины: analytics/exports/cities.json."""
+    from citiesneversleep.export import build_web_export
+
+    out, payload = build_web_export()
+    size_kb = out.stat().st_size / 1024
+    console.print(f"Сохранено {len(payload['cities'])} городов → {out} ({size_kb:.0f} КБ)")
 
 
 @app.command("fetch")

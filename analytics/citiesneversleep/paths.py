@@ -17,6 +17,7 @@ POP_PROCESSED_DIR = PROCESSED_DIR / "population"
 CITIES_PROCESSED_DIR = PROCESSED_DIR / "cities"
 LIGHTS_PROCESSED_DIR = PROCESSED_DIR / "lights"
 TRENDS_PROCESSED_DIR = PROCESSED_DIR / "trends"
+EXPORTS_DIR = REPO_ROOT / "analytics" / "exports"
 
 
 def ensure_data_dirs() -> None:
