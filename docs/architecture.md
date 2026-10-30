@@ -68,7 +68,7 @@
 
 Дополнительные поля метаданных: `fetched_at` (дата выгрузки из Wikidata), `n_cities`, `year_min`, `year_max`, `n_years`, `n_primary`, `n_conflict_city_years`, `selection_rule`, `oktmo_status_by_city`, `query`.
 
-### Набор `cities/ru_cities`, схема 1.0.0
+### Набор `cities/ru_cities`, схема 1.1.0
 
 Справочник городов, одна строка на `city_id`.
 
@@ -77,6 +77,7 @@
 | `city_id` | строка | идентификатор Wikidata |
 | `name` | строка | название на русском языке |
 | `oktmo`, `oktmo_status` | строка | как в наборе населения; при нескольких кодах предпочитается корректный |
+| `coverage` | строка | ветвь отбора по ADR-0006: `p17_russia` или `oktmo_only` |
 | `lat`, `lon` | число | координаты (P625), WGS 84 |
 | `population_latest` | целое | последнее основное значение населения |
 | `population_latest_year` | целое | год этого значения |

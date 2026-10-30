@@ -106,7 +106,12 @@ def test_cities_from_rows():
             "oktmo": "45000000000",
             "coord": "Point(37.5 55.8)",
         },
-        {"city": E + "Q2", "cityLabel": "Без координат", "oktmo": "45000000"},
+        {
+            "city": E + "Q2",
+            "cityLabel": "Без координат",
+            "oktmo": "45000000",
+            "coverage": "oktmo_only",
+        },
     ]
     cities = cities_from_rows(rows, population)
     assert list(cities.columns) == CITIES_COLUMNS
@@ -117,6 +122,8 @@ def test_cities_from_rows():
     assert (q1["population_latest"], q1["population_latest_year"]) == (120, 2024)
     q2 = cities.set_index("city_id").loc["Q2"]
     assert pd.isna(q2["lat"]) and pd.isna(q2["population_latest"])
+    assert q1["coverage"] == "p17_russia"  # значение по умолчанию
+    assert q2["coverage"] == "oktmo_only"
 
 
 @pytest.mark.parametrize(
