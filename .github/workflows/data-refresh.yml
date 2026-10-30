@@ -12,7 +12,7 @@ on:
         required: true
         default: wikidata
         type: choice
-        options: [wikidata, lights]
+        options: [wikidata, lights, lightmap]
       years:
         description: "Годы для lights"
         required: false
@@ -61,6 +61,16 @@ jobs:
         run: |
           log=$(tail -c 3000 fetch.log 2>/dev/null | sed ':a;N;$!ba;s/\n/%0A/g')
           echo "::error title=data-refresh::$log"
+
+      - name: Build lightmap
+        if: inputs.source == 'lightmap'
+        run: |
+          set -o pipefail
+          y="${{ inputs.years }}"; y="${y##*-}"
+          uv run cns fetch-vnl --year "$y"
+          uv run cns process-vnl --year "$y"
+          uv run cns export-lightmap --year "$y" 2>&1 | tee fetch.log
+          git add -A analytics/exports
 
       - name: Push branch
         id: push

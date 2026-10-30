@@ -179,6 +179,16 @@ def export_web() -> None:
     console.print(f"Сохранено {len(payload['cities'])} городов → {out} ({size_kb:.0f} КБ)")
 
 
+@app.command("export-lightmap")
+def export_lightmap(year: int = typer.Option(2024, "--year")) -> None:
+    """Ночной снимок для витрины: analytics/exports/lightmap_<год>.png."""
+    from citiesneversleep.export_lightmap import build_lightmap
+
+    out, img = build_lightmap(year)
+    lit = float((img > 0).mean())
+    console.print(f"{out}: {img.shape[1]}×{img.shape[0]}, светлых пикселей {lit:.1%}")
+
+
 @app.command("fetch")
 def fetch_all(
     years: str | None = typer.Option("2012-2024", "--years"),
