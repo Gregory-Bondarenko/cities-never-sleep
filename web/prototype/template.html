@@ -191,6 +191,8 @@ footer a:hover{color:var(--led)}
 <div class="pin" id="pin" aria-hidden="true"></div>
 
 <script id="data" type="application/json">__DATA__</script>
+<script id="land" type="application/json">__LAND__</script>
+<script id="lightmap" type="application/json">__LIGHTMAP__</script>
 <script type="module">
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
@@ -209,12 +211,12 @@ const r0 = F/Math.pow(Math.tan(Math.PI/4+p0/2),n);
 function project(lat, lon){
   if (lon < 0) lon += 360;
   const r = F/Math.pow(Math.tan(Math.PI/4+lat*rad/2),n), t = n*(lon*rad-l0);
-  return [r*Math.sin(t)*100, -(r0 - r*Math.cos(t))*100];
+  return [r*Math.sin(t)*100, (r0 - r*Math.cos(t))*100];  // x на восток, y на север
 }
 C.forEach(c => { const [x,y] = project(c.lat,c.lon); c.x=x; c.z=-y; });
 
 /* --- цвета --- */
-const COL = {bone:new THREE.Color("#c9c4ba"), led:new THREE.Color("#e6eef5"), sodium:new THREE.Color("#e89a4e"), graphite:new THREE.Color("#4a4f55"), ghost:new THREE.Color("#1d1f22")};
+const COL = {bone:new THREE.Color("#c9c4ba"), led:new THREE.Color("#e6eef5"), sodium:new THREE.Color("#e89a4e"), graphite:new THREE.Color("#4a4f55"), ghost:new THREE.Color("#111214")};
 function classColor(c){ return c.cls===1?COL.led:c.cls===-1?COL.sodium:COL.graphite; }
 
 /* --- сцена --- */
@@ -229,10 +231,34 @@ const camera = new THREE.PerspectiveCamera(32, innerWidth/innerHeight, 0.1, 2000
 
 /* сетка широт и долгот: даёт глазу масштаб страны */
 const grid = new THREE.Group();
-const gmat = new THREE.LineBasicMaterial({color:0x16181b});
+const gmat = new THREE.LineBasicMaterial({color:0x101214});
 for (let lon=20; lon<=200; lon+=20){ const pts=[]; for(let lat=40; lat<=78; lat+=1){const [x,y]=project(lat,lon>180?lon-360:lon); pts.push(new THREE.Vector3(x,0,-y));} grid.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),gmat)); }
 for (let lat=40; lat<=75; lat+=5){ const pts=[]; for(let lon=20; lon<=190; lon+=2){const [x,y]=project(lat,lon>180?lon-360:lon); pts.push(new THREE.Vector3(x,0,-y));} grid.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),gmat)); }
+grid.traverse(o => { if (o.material) o.material = gmat; });
 scene.add(grid);
+
+/* береговая линия: слой «суша» Natural Earth, без политических границ */
+const LAND = JSON.parse(document.getElementById("land").textContent);
+const coast = new THREE.Group();
+const cmat = new THREE.LineBasicMaterial({color:0x3a3d42, transparent:true, opacity:1});
+LAND.forEach(line => { const pts = line.map(([lon,lat]) => { const [x,y] = project(lat,lon); return new THREE.Vector3(x,0.02,-y); }); coast.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), cmat)); });
+scene.add(coast);
+
+/* ночной снимок VIIRS как подложка */
+const LM = JSON.parse(document.getElementById("lightmap").textContent);
+let lightmat = null;
+if (LM.src){
+  const tex = new THREE.TextureLoader().load(LM.src); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const b = LM.bounds, SX = 240, SY = 60, pos = [], uv = [], idx = [];
+  for (let j=0;j<=SY;j++) for (let i=0;i<=SX;i++){
+    const lon = b.west + (b.east-b.west)*i/SX, lat = b.south + (b.north-b.south)*j/SY;
+    const [x,y] = project(lat,lon); pos.push(x,0,-y); uv.push(i/SX, j/SY);
+  }
+  for (let j=0;j<SY;j++) for (let i=0;i<SX;i++){ const a=j*(SX+1)+i, c=a+SX+1; idx.push(a,c,a+1, a+1,c,c+1); }
+  const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos,3)); g.setAttribute("uv", new THREE.Float32BufferAttribute(uv,2)); g.setIndex(idx);
+  lightmat = new THREE.MeshBasicMaterial({map:tex, color:new THREE.Color("#f0c58e"), transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, opacity:1, side:THREE.DoubleSide});
+  const lmesh = new THREE.Mesh(g, lightmat); lmesh.position.y = 0.005; lmesh.renderOrder = -1; scene.add(lmesh);
+}
 
 /* столбы */
 const geo = new THREE.BoxGeometry(1,1,1); geo.translate(0,.5,0);
@@ -287,9 +313,9 @@ const center = new THREE.Vector3(); C.forEach(c=>{center.x+=c.x;center.z+=c.z});
 const volzh = C.findIndex(c=>c.name==="Волжский");
 const V = C[volzh];
 const SHOTS = {
-  intro:   {pos:[center.x-6, 44, center.z+118], look:[center.x-8, 2, center.z-4]},
-  growth:  {pos:[-38, 30, 74], look:[-8, 4, -6]},
-  step2021:{pos:[-58, 22, 52], look:[-18, 4, -8]},
+  intro:   {pos:[center.x+4, 150, center.z+48], look:[center.x, 0, center.z-10]},
+  growth:  {pos:[center.x-14, 30, center.z+70], look:[center.x-4, 4, center.z-2]},
+  step2021:{pos:[center.x-32, 22, center.z+50], look:[center.x-14, 4, center.z-2]},
   relative:{pos:[center.x-4, 96, center.z+104], look:[center.x-8, 0, center.z-2]},
   people:  {pos:[center.x-30, 80, center.z+92], look:[center.x-20, 0, center.z-4]},
   point:   {pos:[V.x+15, 15, V.z+32], look:[V.x+1, 5, V.z]},
@@ -414,6 +440,7 @@ function frame(){
     pillars.setColorAt(i, curCol[i]);
     tmpC.copy(curCol[i]).multiplyScalar(.3*wave); discs.setColorAt(i, tmpC);
   }
+  if (lightmat){ const want = (step==="intro"||step==="growth"||step==="step2021") ? 1 : .45; lightmat.opacity += (want*appear - lightmat.opacity)*k; }
   pillars.instanceMatrix.needsUpdate = true; pillars.instanceColor.needsUpdate = true; discs.instanceColor.needsUpdate = true;
 
   if (step!=="explore" || fly){

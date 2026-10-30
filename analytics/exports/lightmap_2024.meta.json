@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0.0",
+  "source": "VNL V2.1 OpenGeoHub (Zenodo 17294744)",
+  "built_at": "2026-10-30T10:42:30Z",
+  "package_version": "0.4.0",
+  "n_rows": 984,
+  "license_note": "VNL: CC-BY 4.0",
+  "year": 2024,
+  "width": 3864,
+  "height": 984,
+  "bounds": {
+    "west": 19.00000000000017,
+    "south": 41.0033333333333,
+    "east": 180.00000000000028,
+    "north": 82.00333333333333
+  },
+  "crs": "EPSG:4326",
+  "downsample": "максимум по блокам 10×10",
+  "scale": "log1p(min(L, 120.0)) / log1p(120.0) · 255"
+}

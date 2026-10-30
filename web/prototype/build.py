@@ -3,6 +3,7 @@
     python3 web/prototype/build.py
 """
 
+import base64
 import json
 from pathlib import Path
 
@@ -27,7 +28,19 @@ def main() -> None:
         ])
     data = {"years": d["years"], "index": [d["national_index"][str(y)] for y in d["years"]], "c": rows}
     payload = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
-    html = (HERE / "template.html").read_text(encoding="utf-8").replace("__DATA__", payload)
+    land = (HERE / "land_lines.json").read_text(encoding="utf-8")
+    lm = {}
+    lm_png = sorted((ROOT / "analytics/exports").glob("lightmap_*.png"))
+    if lm_png:
+        meta = json.loads(lm_png[-1].with_suffix(".meta.json").read_text(encoding="utf-8"))
+        b64 = base64.b64encode(lm_png[-1].read_bytes()).decode()
+        lm = {"src": f"data:image/png;base64,{b64}", "bounds": meta["bounds"], "year": meta["year"]}
+    html = (
+        (HERE / "template.html").read_text(encoding="utf-8")
+        .replace("__DATA__", payload)
+        .replace("__LAND__", land)
+        .replace("__LIGHTMAP__", json.dumps(lm))
+    )
     (HERE / "index.html").write_text(html, encoding="utf-8")
     print(f"{len(rows)} городов, {len(html) // 1024} КБ")
 
