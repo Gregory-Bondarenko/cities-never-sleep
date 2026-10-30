@@ -161,6 +161,22 @@ def build_lights(
     )
 
 
+@app.command("build-trends")
+def build_trends() -> None:
+    """Тренды яркости и населения, классы динамики (наборы lights и population)."""
+    from citiesneversleep.metrics.trends import build_city_trends
+
+    out, df = build_city_trends()
+    console.print(f"Сохранено {len(df)} городов → {out}")
+    console.print(pd_crosstab(df))
+
+
+def pd_crosstab(df) -> str:
+    import pandas as pd
+
+    return pd.crosstab(df["lights_class"], df["population_class"], margins=True).to_string()
+
+
 @app.command("fetch")
 def fetch_all(
     years: str | None = typer.Option("2012-2024", "--years"),

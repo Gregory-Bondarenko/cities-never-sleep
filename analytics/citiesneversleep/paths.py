@@ -16,6 +16,7 @@ VNL_INTERIM_DIR = INTERIM_DIR / "vnl"
 POP_PROCESSED_DIR = PROCESSED_DIR / "population"
 CITIES_PROCESSED_DIR = PROCESSED_DIR / "cities"
 LIGHTS_PROCESSED_DIR = PROCESSED_DIR / "lights"
+TRENDS_PROCESSED_DIR = PROCESSED_DIR / "trends"
 
 
 def ensure_data_dirs() -> None:
@@ -25,6 +26,7 @@ def ensure_data_dirs() -> None:
         POP_PROCESSED_DIR,
         CITIES_PROCESSED_DIR,
         LIGHTS_PROCESSED_DIR,
+        TRENDS_PROCESSED_DIR,
         MANUAL_DIR,
         PROCESSED_DIR,
     ):

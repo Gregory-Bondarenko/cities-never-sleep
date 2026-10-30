@@ -79,6 +79,7 @@ def test_nan_share_and_near_cap(tmp_path, cities):
     assert q1["flag_nan"]
     assert q1["n_near_cap"] == 1 and q1["flag_near_cap"]
     assert q1["max_radiance"] == pytest.approx(3300.0)
+    assert q1["sol_unclipped"] > q1["sol"]  # яркий пиксель обрезан общим порогом
 
 
 def test_storage_cap():

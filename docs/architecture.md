@@ -90,13 +90,18 @@
 |---|---|
 | `city_id`, `year` | ключ |
 | `radius_km` | радиус круга r |
-| `sol` | Σ L·A внутри r: L в нВт/см²/ср, A площадь пикселя в км² |
+| `sol` | Σ min(L, 3 276,7)·A внутри r: L в нВт/см²/ср, A площадь пикселя в км² (ADR-0007) |
+| `sol_unclipped` | то же без общего порога |
 | `sol_r05`, `sol_r2` | то же для 0,5·r и 2·r, для оценки чувствительности к радиусу |
 | `lit_area_km2` | площадь пикселей с L > 0 внутри r |
 | `mean_radiance`, `max_radiance` | средняя (с весом площади) и максимальная яркость внутри r |
 | `n_pixels`, `share_nan` | число пикселей в круге и доля пропусков |
 | `n_near_cap`, `flag_near_cap` | пиксели выше 90% предела хранения int16 (с учётом деления на 10 до 2021 года) |
 | `flag_nan` | доля пропусков больше 10% |
+
+### Набор `trends/city_trends`, схема 1.0.0
+
+Один город на строку: координаты и население из справочника; `lights_rel_pct_per_year`, `lights_rel_p_value`, `lights_class` (относительно национального индекса, ADR-0007); `lights_raw_pct_per_year`; `lights_rel_pct_per_year_pre2022` и `lights_class_pre2022` (только 2012–2021); `lights_rel_pct_per_year_r2` (круг 2·r); `population_pct_per_year`, `population_p_value`, `population_class`; `quadrant`; флаги `any_flag_nan`, `any_flag_near_cap`. Порог стабильности 1% в год, уровень значимости 0,05, минимум 8 лет.
 
 Радиус кругового контура вычисляется из `population_latest` функцией `process/boundaries.radius_km` (ADR-0005) и в справочнике не хранится.
 
@@ -113,6 +118,7 @@
 | `citiesneversleep/meta.py` | метаданные артефактов по контракту |
 | `citiesneversleep/process/boundaries.py` | радиус кругового контура города (ADR-0005) |
 | `citiesneversleep/metrics/zonal.py` | зональная статистика по городам и годам |
+| `citiesneversleep/metrics/trends.py` | национальный индекс, относительные тренды, классы динамики |
 
 Готовые артефакты: `data/processed/population/ru_cities_population.{parquet,csv,meta.json}`.
 
