@@ -142,6 +142,25 @@ def process_vnl(
         console.print(f"  ✓ {p}")
 
 
+@app.command("build-lights")
+def build_lights(
+    years: str | None = typer.Option("2012-2024", "--years"),
+    year: int | None = typer.Option(None, "--year"),
+) -> None:
+    """Зональная статистика по городам (круговые контуры, ADR-0005)."""
+    from citiesneversleep.metrics.zonal import build_city_lights
+
+    selected = _resolve_years(years, year)
+    out, df = build_city_lights(selected)
+    sol = df.groupby("year")["sol"].sum()
+    console.print(
+        f"Сохранено {len(df)} строк, {df['city_id'].nunique()} городов → {out}\n"
+        f"флаг NaN: {int(df['flag_nan'].fillna(False).sum())}, "
+        f"близко к пределу: {int(df['flag_near_cap'].fillna(False).sum())}\n"
+        + "\n".join(f"  {y}: Σsol = {v:,.0f}" for y, v in sol.items())
+    )
+
+
 @app.command("fetch")
 def fetch_all(
     years: str | None = typer.Option("2012-2024", "--years"),

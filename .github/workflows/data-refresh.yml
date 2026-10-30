@@ -12,7 +12,11 @@ on:
         required: true
         default: wikidata
         type: choice
-        options: [wikidata]
+        options: [wikidata, lights]
+      years:
+        description: "Годы для lights"
+        required: false
+        default: "2012-2024"
 
 permissions:
   contents: write
@@ -20,7 +24,7 @@ permissions:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v7
 
@@ -38,6 +42,16 @@ jobs:
       - name: Fetch Wikidata
         if: inputs.source == 'wikidata'
         run: uv run cns fetch-pop | tee fetch.log
+
+      - name: Build city lights
+        if: inputs.source == 'lights'
+        run: |
+          for y in $(uv run python -c "from citiesneversleep.sources.vnl_zenodo import parse_years_spec as p; print(*p('${{ inputs.years }}'))"); do
+            uv run cns fetch-vnl --year "$y"
+            uv run cns process-vnl --year "$y"
+            rm -f data/raw/vnl/*_s_${y}0101_*.tif
+          done
+          uv run cns build-lights --years "${{ inputs.years }}" | tee fetch.log
 
       - name: Push branch
         id: push

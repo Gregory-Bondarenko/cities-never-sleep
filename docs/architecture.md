@@ -81,6 +81,22 @@
 | `population_latest` | целое | последнее основное значение населения |
 | `population_latest_year` | целое | год этого значения |
 
+### Набор `lights/city_lights`, схема 1.0.0
+
+Город × год, контур по ADR-0005.
+
+| Столбец | Описание |
+|---|---|
+| `city_id`, `year` | ключ |
+| `radius_km` | радиус круга r |
+| `sol` | Σ L·A внутри r: L в нВт/см²/ср, A площадь пикселя в км² |
+| `sol_r05`, `sol_r2` | то же для 0,5·r и 2·r, для оценки чувствительности к радиусу |
+| `lit_area_km2` | площадь пикселей с L > 0 внутри r |
+| `mean_radiance`, `max_radiance` | средняя (с весом площади) и максимальная яркость внутри r |
+| `n_pixels`, `share_nan` | число пикселей в круге и доля пропусков |
+| `n_near_cap`, `flag_near_cap` | пиксели выше 90% предела хранения int16 (с учётом деления на 10 до 2021 года) |
+| `flag_nan` | доля пропусков больше 10% |
+
 Радиус кругового контура вычисляется из `population_latest` функцией `process/boundaries.radius_km` (ADR-0005) и в справочнике не хранится.
 
 ## Текущее состояние (v0.1.0)
@@ -95,6 +111,7 @@
 | `citiesneversleep/validate/oktmo.py` | нормализация и проверка кодов ОКТМО |
 | `citiesneversleep/meta.py` | метаданные артефактов по контракту |
 | `citiesneversleep/process/boundaries.py` | радиус кругового контура города (ADR-0005) |
+| `citiesneversleep/metrics/zonal.py` | зональная статистика по городам и годам |
 
 Готовые артефакты: `data/processed/population/ru_cities_population.{parquet,csv,meta.json}`.
 
