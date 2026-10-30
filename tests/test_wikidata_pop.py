@@ -7,7 +7,13 @@ import json
 import httpx
 import pytest
 
-from citiesneversleep.sources.wikidata_pop import fetch_sparql, rows_to_dataframe, save_population
+from citiesneversleep.sources.wikidata_pop import (
+    COLUMNS,
+    SCHEMA_VERSION,
+    fetch_sparql,
+    rows_to_dataframe,
+    save_population,
+)
 
 
 def _binding(qid: str, label: str, oktmo: str, pop: str, date: str | None) -> dict:
@@ -64,10 +70,12 @@ def test_rows_to_dataframe():
     with _client([httpx.Response(200, json=SPARQL_RESPONSE)]) as client:
         df = rows_to_dataframe(fetch_sparql(client=client))
 
-    assert set(df["wikidata_id"]) == {"Q1", "Q3"}  # нечисловое население отброшено
-    q1 = df[df["wikidata_id"] == "Q1"]
+    assert set(df["city_id"]) == {"Q1", "Q3"}  # нечисловое население отброшено
+    q1 = df[df["city_id"] == "Q1"]
     assert q1["year"].tolist() == [2013, 2020]  # сортировка по году
-    assert df.loc[df["wikidata_id"] == "Q3", "year"].isna().all()
+    assert df.loc[df["city_id"] == "Q3", "year"].isna().all()
+    assert list(df.columns) == COLUMNS
+    assert set(df["oktmo_status"]) == {"ok"}
 
 
 def test_rows_to_dataframe_empty():
@@ -83,5 +91,9 @@ def test_save_population(tmp_path):
 
     assert parquet_path.exists() and csv_path.exists()
     meta = json.loads((tmp_path / "ru_cities_population.meta.json").read_text(encoding="utf-8"))
+    assert meta["schema_version"] == SCHEMA_VERSION
     assert meta["n_rows"] == len(df)
-    assert meta["years"] == [2013, 2020]
+    assert meta["n_cities"] == 2
+    assert (meta["year_min"], meta["year_max"], meta["n_years"]) == (2013, 2020, 2)
+    assert meta["oktmo_status_by_city"] == {"ok": 2}
+    assert "built_at" in meta and "package_version" in meta

@@ -58,9 +58,9 @@ def population_stats() -> dict:
     recent = df[(df["year"] >= 2012) & (df["year"] <= 2024)]
     return {
         "rows": len(df),
-        "cities": int(df["wikidata_id"].nunique()),
-        "cities_2012_2024": int(recent["wikidata_id"].nunique()),
-        "bad_oktmo": int((~df["oktmo"].str.fullmatch(r"\d{8}|\d{11}")).sum()),
+        "cities": int(df["city_id"].nunique()),
+        "cities_2012_2024": int(recent["city_id"].nunique()),
+        "bad_oktmo": int((df["oktmo_status"] == "invalid").sum()),
     }
 
 

@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
-import json
 import time
+from datetime import UTC, datetime
 from pathlib import Path
 
 import httpx
 import pandas as pd
 
 from citiesneversleep import __version__
+from citiesneversleep.meta import build_meta, write_meta
 from citiesneversleep.paths import POP_PROCESSED_DIR, ensure_data_dirs
+from citiesneversleep.validate.oktmo import add_oktmo_status
 
 WIKIDATA_SPARQL = "https://query.wikidata.org/sparql"
 USER_AGENT = (
@@ -73,23 +75,26 @@ def fetch_sparql(
             client.close()
 
 
+COLUMNS = ["city_id", "name", "oktmo", "oktmo_status", "population", "date", "year"]
+SCHEMA_VERSION = "1.0.0"
+LICENSE_NOTE = "Wikidata: CC0; значения населения происходят из бюллетеней Росстата"
+
+
 def rows_to_dataframe(rows: list[dict]) -> pd.DataFrame:
+    """Привести ответ SPARQL к схеме набора ``population`` (см. docs/architecture.md).
+
+    Ключ города ``city_id`` равен идентификатору Wikidata. ОКТМО нормализуется,
+    его корректность отражается в ``oktmo_status``; строки с некорректным кодом
+    не отбрасываются.
+    """
     if not rows:
-        return pd.DataFrame(
-            columns=["wikidata_id", "name", "oktmo", "population", "date", "year"]
-        )
+        return pd.DataFrame(columns=COLUMNS)
     df = pd.DataFrame(rows)
-    df = df.rename(
-        columns={
-            "city": "wikidata_id",
-            "cityLabel": "name",
-            "pop": "population",
-        }
-    )
-    df["wikidata_id"] = df["wikidata_id"].str.replace(
+    df = df.rename(columns={"city": "city_id", "cityLabel": "name", "pop": "population"})
+    df["city_id"] = df["city_id"].str.replace(
         "http://www.wikidata.org/entity/", "", regex=False
     )
-    df["oktmo"] = df["oktmo"].astype(str).str.strip()
+    df = add_oktmo_status(df)
     df["population"] = pd.to_numeric(df["population"], errors="coerce")
     if "date" in df.columns:
         df["date"] = pd.to_datetime(df["date"], errors="coerce", utc=True)
@@ -98,16 +103,41 @@ def rows_to_dataframe(rows: list[dict]) -> pd.DataFrame:
         df["date"] = pd.NaT
         df["year"] = pd.Series([pd.NA] * len(df), dtype="Int64")
     df = df.dropna(subset=["population"])
-    df = df.sort_values(["oktmo", "year", "name"], na_position="last")
-    return df.reset_index(drop=True)
+    df = df.sort_values(["city_id", "year", "population"], na_position="last")
+    return df[COLUMNS].reset_index(drop=True)
+
+
+def population_meta(df: pd.DataFrame, *, fetched_at: str | None = None) -> dict:
+    """Метаданные набора по контракту артефактов."""
+    years = df["year"].dropna()
+    status_counts = (
+        df.drop_duplicates("city_id")["oktmo_status"].value_counts().sort_index().to_dict()
+        if len(df)
+        else {}
+    )
+    return build_meta(
+        schema_version=SCHEMA_VERSION,
+        source="Wikidata SPARQL",
+        n_rows=len(df),
+        license_note=LICENSE_NOTE,
+        endpoint=WIKIDATA_SPARQL,
+        fetched_at=fetched_at,
+        n_cities=int(df["city_id"].nunique()) if len(df) else 0,
+        year_min=int(years.min()) if len(years) else None,
+        year_max=int(years.max()) if len(years) else None,
+        n_years=int(years.nunique()),
+        oktmo_status_by_city={str(k): int(v) for k, v in status_counts.items()},
+        query=SPARQL_QUERY_PLAN.strip(),
+    )
 
 
 def save_population(
     df: pd.DataFrame,
     *,
     dest_dir: Path | None = None,
+    fetched_at: str | None = None,
 ) -> tuple[Path, Path]:
-    """Сохранить parquet + csv в data/processed/population/."""
+    """Сохранить Parquet, CSV и метаданные в data/processed/population/."""
     ensure_data_dirs()
     dest_dir = dest_dir or POP_PROCESSED_DIR
     dest_dir.mkdir(parents=True, exist_ok=True)
@@ -117,30 +147,13 @@ def save_population(
 
     df.to_parquet(parquet_path, index=False)
     df.to_csv(csv_path, index=False)
-
-    n_cities = df["oktmo"].nunique() if len(df) else 0
-    years = (
-        sorted(int(y) for y in df["year"].dropna().unique().tolist()) if len(df) else []
-    )
-    meta = {
-        "source": "Wikidata SPARQL",
-        "endpoint": WIKIDATA_SPARQL,
-        "license_note": (
-            "Wikidata: CC0; значения населения происходят из бюллетеней Росстата"
-        ),
-        "n_rows": int(len(df)),
-        "n_oktmo": int(n_cities),
-        "years": years,
-        "query": SPARQL_QUERY_PLAN.strip(),
-    }
-    meta_path.write_text(
-        json.dumps(meta, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    write_meta(meta_path, population_meta(df, fetched_at=fetched_at))
     return parquet_path, csv_path
 
 
 def fetch_and_save(*, dest_dir: Path | None = None) -> tuple[Path, Path, pd.DataFrame]:
+    fetched_at = datetime.now(UTC).isoformat(timespec="seconds").replace("+00:00", "Z")
     rows = fetch_sparql()
     df = rows_to_dataframe(rows)
-    parquet_path, csv_path = save_population(df, dest_dir=dest_dir)
+    parquet_path, csv_path = save_population(df, dest_dir=dest_dir, fetched_at=fetched_at)
     return parquet_path, csv_path, df

@@ -24,6 +24,13 @@ def _resolve_years(years: str | None, year: int | None) -> list[int]:
     return list(DEFAULT_YEARS)
 
 
+def _pop_summary(df) -> str:
+    if not len(df):
+        return "0 строк"
+    invalid = df.loc[df["oktmo_status"] == "invalid", "city_id"].nunique()
+    return f"{len(df)} строк, {df['city_id'].nunique()} городов, некорректный ОКТМО у {invalid}"
+
+
 @app.callback()
 def main() -> None:
     """Пайплайн данных проекта «Города не спят»."""
@@ -88,15 +95,11 @@ def fetch_pop(
     if dry_run:
         rows = fetch_sparql()
         df = rows_to_dataframe(rows)
-        n_oktmo = df["oktmo"].nunique() if len(df) else 0
-        console.print(f"[bold]Wikidata[/bold]: {len(df)} строк, {n_oktmo} ОКТМО")
+        console.print(f"[bold]Wikidata[/bold]: {_pop_summary(df)}")
         return
 
     parquet_path, csv_path, df = fetch_and_save()
-    console.print(
-        f"Сохранено {len(df)} строк, {df['oktmo'].nunique()} ОКТМО →\n"
-        f"  {parquet_path}\n  {csv_path}"
-    )
+    console.print(f"Сохранено: {_pop_summary(df)} →\n  {parquet_path}\n  {csv_path}")
 
 
 @app.command("process-vnl")
