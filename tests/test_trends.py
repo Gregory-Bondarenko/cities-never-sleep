@@ -102,3 +102,18 @@ def test_city_trends_relative():
     assert t.loc["Q1", "quadrant"] == "свет растёт, население гаснет"
     assert t.loc["Q2", "quadrant"] == "мало данных"
     assert t.loc["Q1", "any_flag_near_cap"]
+
+
+def test_population_trend_needs_only_five_years():
+    lights = pd.concat([_lights(f"Q{i}", 100 * (i + 1), 1.0) for i in range(3)])
+    population = pd.DataFrame(
+        {
+            "city_id": "Q1",
+            "year": [2016, 2017, 2018, 2019, 2020],
+            "population": [100_000, 102_000, 104_000, 106_100, 108_200],
+            "is_primary": True,
+        }
+    )
+    t = city_trends(lights, population).set_index("city_id")
+    assert t.loc["Q1", "n_years_population"] == 5
+    assert t.loc["Q1", "population_class"] == "растёт"

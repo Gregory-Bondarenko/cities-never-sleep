@@ -20,7 +20,11 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
-MIN_YEARS = 8  # меньше точек: тренд не оценивается
+MIN_YEARS = 8  # меньше точек: тренд яркости не оценивается
+# Ряды населения гладкие, но в Wikidata у крупных городов часто короче 8 лет
+# (41 из 149 городов с населением больше 100 тыс.). Пяти точек достаточно для
+# наклона Сена; минимальный p-value Манна–Кендалла при n = 5 около 0,03.
+MIN_YEARS_POPULATION = 5
 ALPHA = 0.05
 STABLE_BAND = 0.01  # |изменение| < 1% в год считается стабильностью
 SEAM_LAST_YEAR = 2021  # последний год до смены шкалы VNL (#10)
@@ -132,7 +136,11 @@ def city_trends(lights: pd.DataFrame, population: pd.DataFrame) -> pd.DataFrame:
         t_pre = log_trend(pre["year"], pre["sol_rel"])
         t_r2 = log_trend(g["year"], g["sol_r2_rel"])
         p = pop_by_city.get(city_id)
-        t_pop = log_trend(p["year"], p["population"]) if p is not None else NO_TREND
+        t_pop = (
+            log_trend(p["year"], p["population"], MIN_YEARS_POPULATION)
+            if p is not None
+            else NO_TREND
+        )
         rows.append(
             {
                 "city_id": city_id,
@@ -200,6 +208,7 @@ def build_city_trends(dest_dir=None):
             int(k): round(float(v), 4) for k, v in np.exp(national_index(lights)).items()
         },
         min_years=MIN_YEARS,
+        min_years_population=MIN_YEARS_POPULATION,
         alpha=ALPHA,
         stable_band_pct_per_year=STABLE_BAND * 100,
         lights_class_counts=trends["lights_class"].value_counts().to_dict(),
