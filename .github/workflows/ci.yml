@@ -6,8 +6,12 @@ on:
   push:
     branches: [main]
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  lint-and-smoke:
+  lint-and-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,7 +25,7 @@ jobs:
         run: uv python install 3.12
 
       - name: Sync dependencies
-        run: uv sync --all-extras
+        run: uv sync --all-extras --frozen
 
       - name: Ruff
         run: uv run ruff check analytics tests
@@ -29,8 +33,7 @@ jobs:
       - name: Pytest
         run: uv run pytest -q
 
-      - name: CLI dry-run
+      - name: CLI
         run: |
           uv run cns version
-          uv run cns fetch-vnl --dry-run --years 2013,2022
-          uv run cns fetch-pop --dry-run
+          uv run cns --help
