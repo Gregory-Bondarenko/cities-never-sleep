@@ -6,6 +6,10 @@
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-30
+
+Выпуск включает вехи v0.2.0 (города и границы) и v0.3.0 (зональная статистика): справочник 1 068 городов с координатами, правило выбора населения, круговые контуры, яркость по городам за 2012–2024 годы с согласованием рядов и первые тренды.
+
 ### Added
 
 - Workflow `release`: тег и GitHub Release создаются автоматически при попадании в `main` релизной версии; текст берётся из `CHANGELOG.md` (`scripts/release_notes.py`).
@@ -60,5 +64,6 @@
 - `CONTRIBUTING.md`: префиксы веток, Conventional Commits, squash merge, порядок релиза; исправлен путь к `__init__.py`.
 - `README.md`: навигация по документации, значок CI.
 
-[Unreleased]: https://github.com/Gregory-Bondarenko/cities-never-sleep/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/Gregory-Bondarenko/cities-never-sleep/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/Gregory-Bondarenko/cities-never-sleep/releases/tag/v0.3.0
 [0.1.0]: https://github.com/Gregory-Bondarenko/cities-never-sleep/releases/tag/v0.1.0
