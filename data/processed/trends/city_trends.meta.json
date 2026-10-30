@@ -5,7 +5,7 @@
     "population/ru_cities_population",
     "cities/ru_cities"
   ],
-  "built_at": "2026-10-30T09:36:22Z",
+  "built_at": "2026-10-30T09:37:41Z",
   "package_version": "0.2.0-dev",
   "n_rows": 1068,
   "license_note": "VNL: CC-BY 4.0; Wikidata: CC0",
@@ -27,6 +27,7 @@
     "2024": 1.3744
   },
   "min_years": 8,
+  "min_years_population": 5,
   "alpha": 0.05,
   "stable_band_pct_per_year": 1.0,
   "lights_class_counts": {
@@ -36,9 +37,9 @@
     "мало данных": 1
   },
   "population_class_counts": {
-    "стабилен": 647,
-    "гаснет": 287,
-    "растёт": 68,
-    "мало данных": 66
+    "стабилен": 673,
+    "гаснет": 288,
+    "растёт": 71,
+    "мало данных": 36
   }
 }
