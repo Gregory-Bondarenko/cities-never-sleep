@@ -1,0 +1,47 @@
+name: release
+
+# Тег и GitHub Release создаются автоматически, когда в main попадает
+# версия без суффикса dev, для которой ещё нет тега. Текст релиза берётся
+# из раздела CHANGELOG.md. Ручной запуск нужен для повторной попытки.
+
+on:
+  push:
+    branches: [main]
+    paths: [pyproject.toml]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect version
+        id: v
+        run: |
+          version=$(python3 scripts/release_notes.py version)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Версия $version не релизная, пропуск" >> "$GITHUB_STEP_SUMMARY"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          elif git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
+            echo "Тег v$version уже существует, пропуск" >> "$GITHUB_STEP_SUMMARY"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create release
+        if: steps.v.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.v.outputs.version }}
+        run: |
+          # тег ставится на коммит, в котором версия появилась в pyproject.toml
+          target=$(git log -1 --format=%H -- pyproject.toml)
+          python3 scripts/release_notes.py notes "$VERSION" > notes.md
+          gh release create "v$VERSION" --target "$target" --title "v$VERSION" --notes-file notes.md
+          echo "Создан релиз v$VERSION" >> "$GITHUB_STEP_SUMMARY"

@@ -65,12 +65,7 @@ docs: архитектура и дорожная карта
 
 1. Ветка `chore/release-vX.Y.Z`: записи из `[Unreleased]` переносятся в раздел `[X.Y.Z] - ГГГГ-ММ-ДД`, версия в коде без суффикса `dev`.
 2. PR `chore(release): vX.Y.Z`, слияние.
-3. Тег на коммите слияния и GitHub Release:
-   ```bash
-   git checkout main && git pull
-   git tag -a vX.Y.Z -m "vX.Y.Z"
-   git push origin vX.Y.Z
-   ```
+3. После слияния workflow `release` сам создаёт тег `vX.Y.Z` на коммите слияния и GitHub Release с текстом раздела из журнала. Если запуск не прошёл, его можно повторить вручную: Actions → release → Run workflow.
 4. Следующим коммитом версия в коде поднимается до следующей с суффиксом `dev`.
 
 ## Локальная проверка
