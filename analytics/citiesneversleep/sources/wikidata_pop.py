@@ -9,11 +9,12 @@ from pathlib import Path
 import httpx
 import pandas as pd
 
+from citiesneversleep import __version__
 from citiesneversleep.paths import POP_PROCESSED_DIR, ensure_data_dirs
 
 WIKIDATA_SPARQL = "https://query.wikidata.org/sparql"
 USER_AGENT = (
-    "CitiesNeverSleep/0.1.0-dev "
+    f"CitiesNeverSleep/{__version__} "
     "(https://github.com/Gregory-Bondarenko/cities-never-sleep; educational)"
 )
 
