@@ -114,6 +114,10 @@ def main() -> None:
     )
     md = to_markdown(report)
     (args.out / "report.md").write_text(md, encoding="utf-8")
+    if os.environ.get("GITHUB_ACTIONS") == "true":
+        # аннотация читается через API (check-runs/annotations), в отличие от сводки
+        escaped = md.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+        print(f"::notice title=smoke {args.year}::{escaped}")
     summary = os.environ.get("GITHUB_STEP_SUMMARY")
     if summary:
         with open(summary, "a", encoding="utf-8") as fh:
