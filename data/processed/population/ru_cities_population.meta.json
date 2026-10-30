@@ -1,20 +1,23 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "source": "Wikidata SPARQL",
-  "built_at": "2026-10-30T08:01:39Z",
-  "package_version": "0.1.0-dev",
+  "built_at": "2026-10-30T08:43:09Z",
+  "package_version": "0.2.0-dev",
   "n_rows": 36164,
   "license_note": "Wikidata: CC0; значения населения происходят из бюллетеней Росстата",
   "endpoint": "https://query.wikidata.org/sparql",
-  "fetched_at": "2026-10-29",
+  "fetched_at": "2026-10-30T08:42:15Z",
   "n_cities": 1061,
   "year_min": 1350,
   "year_max": 2025,
   "n_years": 322,
+  "n_primary": 36111,
+  "n_conflict_city_years": 38,
+  "selection_rule": "preferred > normal; перепись > оценка; поздняя дата; большее значение",
   "oktmo_status_by_city": {
     "invalid": 1,
     "ok": 1058,
     "short": 2
   },
-  "query": "SELECT ?city ?cityLabel ?oktmo ?pop ?date WHERE {\n  ?city wdt:P31 wd:Q7930989 ;\n        wdt:P17 wd:Q159 ;\n        wdt:P764 ?oktmo ;\n        p:P1082 ?popStmt .\n  ?popStmt ps:P1082 ?pop .\n  OPTIONAL { ?popStmt pq:P585 ?date . }\n  SERVICE wikibase:label { bd:serviceParam wikibase:language \"ru,en\". }\n}"
+  "query": "SELECT ?city ?cityLabel ?oktmo ?pop ?date ?rank ?method WHERE {\n  ?city wdt:P31 wd:Q7930989 ;\n        wdt:P17 wd:Q159 ;\n        wdt:P764 ?oktmo .\n  ?city p:P1082 ?popStmt .\n  ?popStmt ps:P1082 ?pop ;\n           wikibase:rank ?rank .\n  OPTIONAL { ?popStmt pq:P585 ?date . }\n  OPTIONAL { ?popStmt pq:P459 ?method . }\n  SERVICE wikibase:label { bd:serviceParam wikibase:language \"ru,en\". }\n}"
 }
