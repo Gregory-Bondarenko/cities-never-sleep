@@ -20,12 +20,24 @@ USER_AGENT = (
     "(https://github.com/Gregory-Bondarenko/cities-never-sleep; educational)"
 )
 
-# Отбор городов: класс «город» (Q7930989), страна Россия (Q159), есть ОКТМО.
-# Охват выборки обсуждается в #5; при изменении отбора меняются оба запроса.
+# Отбор городов (ADR-0006). Две ветви:
+#   p17_russia: класс «город» (Q7930989), страна Россия (Q159), есть ОКТМО;
+#   oktmo_only: класс «город» или его подкласс, есть ОКТМО, но в Wikidata не указана
+#                 страна Россия. Так в выборку попадают города Республики Крым,
+#                 Севастополя, ДНР, ЛНР, Запорожской и Херсонской областей, учтённые
+#                 в российском классификаторе ОКТМО.
 CITY_FILTER = """
-  ?city wdt:P31 wd:Q7930989 ;
-        wdt:P17 wd:Q159 ;
-        wdt:P764 ?oktmo .
+  {
+    ?city wdt:P31 wd:Q7930989 ;
+          wdt:P17 wd:Q159 ;
+          wdt:P764 ?oktmo .
+    BIND("p17_russia" AS ?coverage)
+  } UNION {
+    ?city wdt:P31/wdt:P279* wd:Q7930989 ;
+          wdt:P764 ?oktmo .
+    FILTER NOT EXISTS { ?city wdt:P17 wd:Q159 . }
+    BIND("oktmo_only" AS ?coverage)
+  }
 """
 
 # Ряд численности: каждое утверждение P1082 с рангом, датой (P585)
@@ -47,7 +59,7 @@ SELECT ?city ?cityLabel ?oktmo ?pop ?date ?rank ?method WHERE {"""
 # Справочник городов: координаты (P625).
 CITIES_QUERY = (
     """
-SELECT ?city ?cityLabel ?oktmo ?coord WHERE {"""
+SELECT ?city ?cityLabel ?oktmo ?coverage ?coord WHERE {"""
     + CITY_FILTER
     + """  OPTIONAL { ?city wdt:P625 ?coord . }
   SERVICE wikibase:label { bd:serviceParam wikibase:language "ru,en". }
@@ -120,12 +132,13 @@ CITIES_COLUMNS = [
     "name",
     "oktmo",
     "oktmo_status",
+    "coverage",
     "lat",
     "lon",
     "population_latest",
     "population_latest_year",
 ]
-CITIES_SCHEMA_VERSION = "1.0.0"
+CITIES_SCHEMA_VERSION = "1.1.0"
 LICENSE_NOTE = "Wikidata: CC0; значения населения происходят из бюллетеней Росстата"
 _RANK_ORDER = {"preferred": 0, "normal": 1, "deprecated": 2}
 _POINT = r"Point\(\s*(?P<lon>-?[\d.]+)\s+(?P<lat>-?[\d.]+)\s*\)"
@@ -210,8 +223,10 @@ def cities_from_rows(rows: list[dict], population: pd.DataFrame) -> pd.DataFrame
     if not rows:
         return pd.DataFrame(columns=CITIES_COLUMNS)
     df = pd.DataFrame(rows).rename(columns={"city": "city_id", "cityLabel": "name"})
-    if "coord" not in df.columns:
-        df["coord"] = pd.NA
+    for col in ("coord", "coverage"):
+        if col not in df.columns:
+            df[col] = pd.NA
+    df["coverage"] = df["coverage"].fillna("p17_russia")
     df["city_id"] = _strip(df["city_id"], ENTITY_PREFIX)
     df = add_oktmo_status(df)
     coords = df["coord"].astype("string").str.extract(_POINT)
@@ -267,6 +282,7 @@ def cities_meta(df: pd.DataFrame, *, fetched_at: str | None = None) -> dict:
         fetched_at=fetched_at,
         n_without_coords=int(df["lat"].isna().sum()) if len(df) else 0,
         n_without_population=int(df["population_latest"].isna().sum()) if len(df) else 0,
+        coverage_counts=df["coverage"].value_counts().to_dict() if len(df) else {},
         query=CITIES_QUERY.strip(),
     )
 
