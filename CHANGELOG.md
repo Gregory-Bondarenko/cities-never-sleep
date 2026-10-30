@@ -16,6 +16,7 @@
 - Выбор одного значения населения на город и год (#7): столбцы `rank`, `method`, `is_primary`, `n_values`, `is_conflict`; схема набора населения 1.1.0.
 - Радиус кругового контура города `process/boundaries.radius_km` (ADR-0005).
 - Workflow `data-refresh`: выгрузка данных на раннере GitHub с пушем в отдельную ветку для PR.
+- Зональная статистика `metrics/zonal.py` и команда `cns build-lights`: набор `lights/city_lights` (схема 1.0.0), сумма излучения с весом площади пикселя в кругах 0,5·r, r и 2·r, флаги пропусков и значений у предела хранения; источник `lights` в `data-refresh`.
 
 ### Changed
 
