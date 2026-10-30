@@ -47,7 +47,7 @@
 
 Запись метаданных выполняется функциями `build_meta` и `write_meta` из `citiesneversleep/meta.py`; `write_meta` отклоняет набор без обязательных полей.
 
-### Набор `population/ru_cities_population`, схема 1.0.0
+### Набор `population/ru_cities_population`, схема 1.1.0
 
 | Столбец | Тип | Описание |
 |---|---|---|
@@ -58,8 +58,30 @@
 | `population` | целое | численность населения |
 | `date` | дата UTC | дата значения (свойство P585), может отсутствовать |
 | `year` | целое | год из `date` |
+| `rank` | строка | ранг утверждения в Wikidata: `preferred`, `normal`, `deprecated` |
+| `method` | строка | способ определения (P459), например `Q39825` для переписи; может отсутствовать |
+| `is_primary` | логический | основное значение для пары «город × год» |
+| `n_values` | целое | число различных значений года среди неустаревших утверждений |
+| `is_conflict` | логический | значения года расходятся |
 
-Дополнительные поля метаданных: `fetched_at` (дата выгрузки из Wikidata), `n_cities`, `year_min`, `year_max`, `n_years`, `oktmo_status_by_city`, `query`.
+Правило выбора основного значения: ранг `preferred` раньше `normal`, перепись раньше оценки, более поздняя дата внутри года, затем большее значение. Устаревшие утверждения и строки без даты основными не бывают. Для анализа используются только строки с `is_primary = true`.
+
+Дополнительные поля метаданных: `fetched_at` (дата выгрузки из Wikidata), `n_cities`, `year_min`, `year_max`, `n_years`, `n_primary`, `n_conflict_city_years`, `selection_rule`, `oktmo_status_by_city`, `query`.
+
+### Набор `cities/ru_cities`, схема 1.0.0
+
+Справочник городов, одна строка на `city_id`.
+
+| Столбец | Тип | Описание |
+|---|---|---|
+| `city_id` | строка | идентификатор Wikidata |
+| `name` | строка | название на русском языке |
+| `oktmo`, `oktmo_status` | строка | как в наборе населения; при нескольких кодах предпочитается корректный |
+| `lat`, `lon` | число | координаты (P625), WGS 84 |
+| `population_latest` | целое | последнее основное значение населения |
+| `population_latest_year` | целое | год этого значения |
+
+Радиус кругового контура вычисляется из `population_latest` функцией `process/boundaries.radius_km` (ADR-0005) и в справочнике не хранится.
 
 ## Текущее состояние (v0.1.0)
 
@@ -72,6 +94,7 @@
 | `citiesneversleep/process/crop.py` | обрезка COG по двум прямоугольникам России, деление 2012–2021 на 10 |
 | `citiesneversleep/validate/oktmo.py` | нормализация и проверка кодов ОКТМО |
 | `citiesneversleep/meta.py` | метаданные артефактов по контракту |
+| `citiesneversleep/process/boundaries.py` | радиус кругового контура города (ADR-0005) |
 
 Готовые артефакты: `data/processed/population/ru_cities_population.{parquet,csv,meta.json}`.
 

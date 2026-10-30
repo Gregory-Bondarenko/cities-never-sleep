@@ -76,6 +76,7 @@ def test_rows_to_dataframe():
     assert df.loc[df["city_id"] == "Q3", "year"].isna().all()
     assert list(df.columns) == COLUMNS
     assert set(df["oktmo_status"]) == {"ok"}
+    assert df["is_primary"].sum() == 2  # по одному на город и год с датой
 
 
 def test_rows_to_dataframe_empty():
@@ -97,3 +98,4 @@ def test_save_population(tmp_path):
     assert (meta["year_min"], meta["year_max"], meta["n_years"]) == (2013, 2020, 2)
     assert meta["oktmo_status_by_city"] == {"ok": 2}
     assert "built_at" in meta and "package_version" in meta
+    assert meta["n_primary"] == 2 and meta["n_conflict_city_years"] == 0
