@@ -6,10 +6,11 @@
 Реализация на numpy, без дополнительных зависимостей.
 
 Классы яркости строятся по относительному ряду: логарифм яркости города
-минус национальный индекс (медиана по городам центрированных логарифмов
-за год). Так снимаются сдвиги, общие для всех городов, в том числе
-ступенька 2021 года в наборе VNL (ADR-0007). Класс «растёт» означает
-рост быстрее типичного города России.
+минус индекс его децили яркости (медиана по городам децили центрированных
+логарифмов за год). Так снимаются сдвиги, общие для городов сопоставимой
+яркости, в том числе ступенька 2021 года в наборе VNL (ADR-0007, ADR-0008).
+Класс «растёт» означает рост быстрее городов сопоставимой яркости.
+Класс относительно национального индекса сохраняется для сравнения.
 """
 
 from __future__ import annotations
@@ -28,7 +29,9 @@ MIN_YEARS_POPULATION = 5
 ALPHA = 0.05
 STABLE_BAND = 0.01  # |изменение| < 1% в год считается стабильностью
 SEAM_LAST_YEAR = 2021  # последний год до смены шкалы VNL (#10)
-SCHEMA_VERSION = "1.0.0"
+SCHEMA_VERSION = "1.1.0"
+N_STRATA = 10  # децили медианной яркости (ADR-0008)
+MIN_CITIES_PER_STRATUM = 30  # при меньшей выборке страт становится меньше
 
 
 @dataclass(frozen=True)
@@ -108,6 +111,36 @@ def national_index(lights: pd.DataFrame, column: str = "sol") -> pd.Series:
     return idx - idx.iloc[0]
 
 
+def brightness_strata(lights: pd.DataFrame, n: int = N_STRATA) -> pd.Series:
+    """Номер страты (1 = самые тусклые) по медиане суммы излучения города за все годы."""
+    med = lights.groupby("city_id")["sol"].median()
+    n = max(1, min(n, len(med) // MIN_CITIES_PER_STRATUM))
+    ranks = med.rank(method="first")
+    return pd.qcut(ranks, n, labels=range(1, n + 1)).astype(int).rename("brightness_decile")
+
+
+def stratified_index(lights: pd.DataFrame, strata: pd.Series, column: str = "sol") -> pd.DataFrame:
+    """Индекс по стратам яркости: строки = страты, столбцы = годы, значения в логарифмах."""
+    out = {}
+    for k, ids in strata.groupby(strata).groups.items():
+        out[k] = national_index(lights[lights["city_id"].isin(ids)], column)
+    return pd.DataFrame(out).T
+
+
+def _relative(lights: pd.DataFrame, column: str, strata: pd.Series | None) -> pd.Series:
+    """Ряд column, делённый на индекс (национальный или своей страты)."""
+    if strata is None:
+        idx = np.exp(national_index(lights, column))
+        return lights[column] / lights["year"].map(idx)
+    idx = np.exp(stratified_index(lights, strata, column))
+    keys = lights["city_id"].map(strata)
+    factor = [
+        idx.at[k, y] if k in idx.index else np.nan
+        for k, y in zip(keys, lights["year"], strict=True)
+    ]
+    return lights[column] / np.asarray(factor, dtype="float64")
+
+
 def city_trends(lights: pd.DataFrame, population: pd.DataFrame) -> pd.DataFrame:
     """Тренды по каждому городу.
 
@@ -121,16 +154,18 @@ def city_trends(lights: pd.DataFrame, population: pd.DataFrame) -> pd.DataFrame:
     ]
     pop_by_city = dict(tuple(pop.groupby("city_id")))
 
-    index = np.exp(national_index(lights))
-    lights = lights.assign(sol_rel=lights["sol"] / lights["year"].map(index))
+    strata = brightness_strata(lights)
     lights = lights.assign(
-        sol_r2_rel=lights["sol_r2"] / lights["year"].map(np.exp(national_index(lights, "sol_r2")))
+        sol_rel=_relative(lights, "sol", strata),
+        sol_r2_rel=_relative(lights, "sol_r2", strata),
+        sol_nat=_relative(lights, "sol", None),
     )
 
     rows = []
     for city_id, g in lights.groupby("city_id"):
         g = g.sort_values("year")
         t_raw = log_trend(g["year"], g["sol"])
+        t_nat = log_trend(g["year"], g["sol_nat"])
         t_all = log_trend(g["year"], g["sol_rel"])
         pre = g[g["year"] <= SEAM_LAST_YEAR]
         t_pre = log_trend(pre["year"], pre["sol_rel"])
@@ -148,6 +183,9 @@ def city_trends(lights: pd.DataFrame, population: pd.DataFrame) -> pd.DataFrame:
                 "lights_rel_pct_per_year": t_all.pct_per_year,
                 "lights_rel_p_value": t_all.p_value,
                 "lights_class": classify(t_all),
+                "brightness_decile": int(strata.get(city_id, 0)),
+                "lights_nat_pct_per_year": t_nat.pct_per_year,
+                "lights_class_national": classify(t_nat),
                 "lights_raw_pct_per_year": t_raw.pct_per_year,
                 "lights_rel_pct_per_year_pre2022": t_pre.pct_per_year,
                 "lights_class_pre2022": classify(t_pre),
@@ -203,7 +241,7 @@ def build_city_trends(dest_dir=None):
         n_rows=len(trends),
         license_note="VNL: CC-BY 4.0; Wikidata: CC0",
         method="наклон Сена по ln(ряда), тест Манна–Кендалла с поправкой на совпадения",
-        lights_class_basis="относительно национального индекса (ADR-0007)",
+        lights_class_basis="относительно индекса своей децили яркости (ADR-0008)",
         national_index={
             int(k): round(float(v), 4) for k, v in np.exp(national_index(lights)).items()
         },
@@ -212,6 +250,7 @@ def build_city_trends(dest_dir=None):
         alpha=ALPHA,
         stable_band_pct_per_year=STABLE_BAND * 100,
         lights_class_counts=trends["lights_class"].value_counts().to_dict(),
+        lights_class_national_counts=trends["lights_class_national"].value_counts().to_dict(),
         population_class_counts=trends["population_class"].value_counts().to_dict(),
     )
     write_meta(dest_dir / "city_trends.meta.json", meta)

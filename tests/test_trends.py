@@ -5,6 +5,7 @@ import pandas as pd
 import pytest
 
 from citiesneversleep.metrics.trends import (
+    brightness_strata,
     city_trends,
     classify,
     log_trend,
@@ -117,3 +118,21 @@ def test_population_trend_needs_only_five_years():
     t = city_trends(lights, population).set_index("city_id")
     assert t.loc["Q1", "n_years_population"] == 5
     assert t.loc["Q1", "population_class"] == "растёт"
+
+
+def test_stratified_index_removes_level_dependent_drift():
+    # 30 тусклых городов дрейфуют вверх на 5% в год, 30 ярких вниз на 3%;
+    # один тусклый город растёт быстрее своей группы
+    frames = [_lights(f"D{i}", 10 + i, 1.05) for i in range(29)]
+    frames.append(_lights("D_fast", 12, 1.12))
+    frames += [_lights(f"B{i}", 10_000 + i, 0.97) for i in range(30)]
+    lights = pd.concat(frames)
+    strata = brightness_strata(lights)
+    assert strata.nunique() == 2
+    t = city_trends(lights, pd.DataFrame(columns=["city_id", "year", "population", "is_primary"]))
+    t = t.set_index("city_id")
+    assert t.loc["D3", "lights_class"] == "стабилен"  # дрейф группы снят
+    assert t.loc["B3", "lights_class"] == "стабилен"
+    assert t.loc["D_fast", "lights_class"] == "растёт"
+    assert t.loc["D3", "lights_class_national"] == "растёт"  # без страт дрейф виден как рост
+    assert t.loc["B3", "lights_class_national"] == "гаснет"

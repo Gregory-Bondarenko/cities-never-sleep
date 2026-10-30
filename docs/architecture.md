@@ -99,9 +99,9 @@
 | `n_near_cap`, `flag_near_cap` | пиксели выше 90% предела хранения int16 (с учётом деления на 10 до 2021 года) |
 | `flag_nan` | доля пропусков больше 10% |
 
-### Набор `trends/city_trends`, схема 1.0.0
+### Набор `trends/city_trends`, схема 1.1.0
 
-Один город на строку: координаты и население из справочника; `lights_rel_pct_per_year`, `lights_rel_p_value`, `lights_class` (относительно национального индекса, ADR-0007); `lights_raw_pct_per_year`; `lights_rel_pct_per_year_pre2022` и `lights_class_pre2022` (только 2012–2021); `lights_rel_pct_per_year_r2` (круг 2·r); `population_pct_per_year`, `population_p_value`, `population_class`; `quadrant`; флаги `any_flag_nan`, `any_flag_near_cap`. Порог стабильности 1% в год, уровень значимости 0,05, минимум 8 лет для яркости и 5 лет для населения.
+Один город на строку: координаты и население из справочника; `lights_rel_pct_per_year`, `lights_rel_p_value`, `brightness_decile`; `lights_class` (относительно индекса своей децили яркости, ADR-0008); `lights_nat_pct_per_year` и `lights_class_national` (относительно национального индекса, ADR-0007); `lights_raw_pct_per_year`; `lights_rel_pct_per_year_pre2022` и `lights_class_pre2022` (только 2012–2021); `lights_rel_pct_per_year_r2` (круг 2·r); `population_pct_per_year`, `population_p_value`, `population_class`; `quadrant`; флаги `any_flag_nan`, `any_flag_near_cap`. Порог стабильности 1% в год, уровень значимости 0,05, минимум 8 лет для яркости и 5 лет для населения.
 
 Радиус кругового контура вычисляется из `population_latest` функцией `process/boundaries.radius_km` (ADR-0005) и в справочнике не хранится.
 
