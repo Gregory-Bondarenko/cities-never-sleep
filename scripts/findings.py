@@ -107,7 +107,8 @@ def main() -> None:
     ps = t[t.flag_point_source]
     print("точечный источник:", len(ps), ps.lights_class.value_counts().to_dict())
     grow = t[t.lights_class == "растёт"]
-    print("«растёт» без точечных источников:", int((~grow.flag_point_source).sum()), "из", len(grow))
+    n_clean = int((~grow.flag_point_source).sum())
+    print("«растёт» без точечных источников:", n_clean, "из", len(grow))
 
 
 if __name__ == "__main__":
