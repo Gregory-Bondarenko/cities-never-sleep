@@ -53,6 +53,7 @@ data/
   processed/          агрегаты с метаданными
   manual/             ручные выгрузки Росстата
 web/                  витрина (стек на согласовании)
+scripts/              служебные скрипты (отчёт пробного прогона)
 docs/                 архитектура, методика, источники, ADR
 ```
 
@@ -73,7 +74,7 @@ docs/                 архитектура, методика, источник
 Изменения вносятся только через ветку и pull request в `main`. Версии по SemVer, журнал по Keep a Changelog.
 
 ```bash
-uv run ruff check analytics tests
+uv run ruff check analytics tests scripts
 uv run pytest -q
 ```
 

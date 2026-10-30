@@ -30,7 +30,7 @@ process process-vnl:
 	$(UV) run cns process-vnl --years $(YEARS) $(if $(VNL_YEAR),--year $(VNL_YEAR),)
 
 lint:
-	$(UV) run ruff check analytics tests
+	$(UV) run ruff check analytics tests scripts
 
 test:
 	$(UV) run pytest -q

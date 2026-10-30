@@ -1,0 +1,57 @@
+name: smoke
+
+# Пробный прогон конвейера на чистой машине: загрузка VNL за один год,
+# обрезка по России и загрузка населения. Запускается вручную.
+# Результат: сводка в отчёте запуска и артефакт smoke-report.
+
+on:
+  workflow_dispatch:
+    inputs:
+      year:
+        description: "Год VNL"
+        required: true
+        default: "2013"
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      YEAR: ${{ inputs.year }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Sync dependencies
+        run: uv sync --all-extras --frozen
+
+      - name: Fetch VNL
+        run: |
+          start=$(date +%s)
+          uv run cns fetch-vnl --year "$YEAR"
+          echo "FETCH_SEC=$(( $(date +%s) - start ))" >> "$GITHUB_ENV"
+
+      - name: Process VNL
+        run: |
+          start=$(date +%s)
+          uv run cns process-vnl --year "$YEAR"
+          echo "PROCESS_SEC=$(( $(date +%s) - start ))" >> "$GITHUB_ENV"
+
+      - name: Fetch population
+        run: uv run cns fetch-pop
+
+      - name: Report
+        run: uv run python scripts/smoke_report.py --year "$YEAR" --out smoke-report
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-report-${{ inputs.year }}
+          path: smoke-report/
