@@ -41,17 +41,26 @@ jobs:
 
       - name: Fetch Wikidata
         if: inputs.source == 'wikidata'
-        run: uv run cns fetch-pop | tee fetch.log
+        run: |
+          set -o pipefail
+          uv run cns fetch-pop 2>&1 | tee fetch.log
 
       - name: Build city lights
         if: inputs.source == 'lights'
         run: |
+          set -o pipefail
           for y in $(uv run python -c "from citiesneversleep.sources.vnl_zenodo import parse_years_spec as p; print(*p('${{ inputs.years }}'))"); do
             uv run cns fetch-vnl --year "$y"
             uv run cns process-vnl --year "$y"
             rm -f data/raw/vnl/*_s_${y}0101_*.tif
           done
-          uv run cns build-lights --years "${{ inputs.years }}" | tee fetch.log
+          uv run cns build-lights --years "${{ inputs.years }}" 2>&1 | tee fetch.log
+
+      - name: Report failure
+        if: failure()
+        run: |
+          log=$(tail -c 3000 fetch.log 2>/dev/null | sed ':a;N;$!ba;s/\n/%0A/g')
+          echo "::error title=data-refresh::$log"
 
       - name: Push branch
         id: push
@@ -60,14 +69,16 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -b "$branch"
-          git add data/processed
+          git add -A data/processed
+          log=$(sed ':a;N;$!ba;s/\n/%0A/g' fetch.log 2>/dev/null)
+          files=$(git status --porcelain --untracked-files=all | head -20 | sed ':a;N;$!ba;s/\n/%0A/g')
           if git diff --cached --quiet; then
-            echo "::notice title=data-refresh::Изменений нет"
+            echo "::notice title=data-refresh::Изменений нет%0A$log%0Aстатус:%0A$files"
             exit 0
           fi
           stat=$(git diff --cached --stat | tail -1)
           git commit -m "data: обновление ${{ inputs.source }} $(date -u +%Y-%m-%d)" -m "Запуск ${{ github.run_id }}"
           git push origin "$branch"
-          summary="ветка $branch%0A$stat%0A$(sed ':a;N;$!ba;s/\n/%0A/g' fetch.log)"
+          summary="ветка $branch%0A$stat%0A$log"
           echo "::notice title=data-refresh::$summary"
           echo "branch=$branch" >> "$GITHUB_OUTPUT"
