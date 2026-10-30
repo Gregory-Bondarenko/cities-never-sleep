@@ -1,0 +1,23 @@
+name: Новая возможность
+description: Задача на развитие продукта
+labels: ["type:feature"]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Цель
+      description: Какую проблему решает и для кого
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Что входит
+      description: Конкретный объём работы
+  - type: textarea
+    id: done
+    attributes:
+      label: Критерий готовности
+      description: Как понять, что задача выполнена
+    validations:
+      required: true
