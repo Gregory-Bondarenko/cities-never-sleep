@@ -45,7 +45,21 @@
 
 Правила версии схемы: переименование или удаление столбца повышает MAJOR, новый столбец повышает MINOR, исправление значений без смены структуры повышает PATCH. Витрина проверяет MAJOR при загрузке.
 
-На момент версии 0.1.0 набор `population/ru_cities_population` не содержит `schema_version`, `built_at` и `package_version`; приведение к контракту запланировано в вехе v0.2.0.
+Запись метаданных выполняется функциями `build_meta` и `write_meta` из `citiesneversleep/meta.py`; `write_meta` отклоняет набор без обязательных полей.
+
+### Набор `population/ru_cities_population`, схема 1.0.0
+
+| Столбец | Тип | Описание |
+|---|---|---|
+| `city_id` | строка | идентификатор Wikidata (`Q…`), ключ города |
+| `name` | строка | название на русском языке |
+| `oktmo` | строка | нормализованный код ОКТМО или исходное значение, если код некорректен |
+| `oktmo_status` | строка | `ok` (11 цифр), `short` (8 цифр, Москва и Санкт-Петербург), `invalid`, `missing` |
+| `population` | целое | численность населения |
+| `date` | дата UTC | дата значения (свойство P585), может отсутствовать |
+| `year` | целое | год из `date` |
+
+Дополнительные поля метаданных: `fetched_at` (дата выгрузки из Wikidata), `n_cities`, `year_min`, `year_max`, `n_years`, `oktmo_status_by_city`, `query`.
 
 ## Текущее состояние (v0.1.0)
 
@@ -56,6 +70,8 @@
 | `citiesneversleep/sources/vnl_zenodo.py` | каталог и загрузка годовых VNL с Zenodo, проверка размера и MD5, манифест |
 | `citiesneversleep/sources/wikidata_pop.py` | SPARQL-запрос населения городов РФ с ОКТМО, сохранение в Parquet и CSV |
 | `citiesneversleep/process/crop.py` | обрезка COG по двум прямоугольникам России, деление 2012–2021 на 10 |
+| `citiesneversleep/validate/oktmo.py` | нормализация и проверка кодов ОКТМО |
+| `citiesneversleep/meta.py` | метаданные артефактов по контракту |
 
 Готовые артефакты: `data/processed/population/ru_cities_population.{parquet,csv,meta.json}`.
 
