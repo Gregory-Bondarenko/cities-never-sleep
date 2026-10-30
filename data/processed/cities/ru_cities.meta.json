@@ -1,13 +1,20 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "source": "Wikidata SPARQL",
-  "built_at": "2026-10-30T08:43:10Z",
+  "built_at": "2026-10-30T09:19:58Z",
   "package_version": "0.2.0-dev",
-  "n_rows": 1061,
+  "n_rows": 1068,
   "license_note": "Wikidata: CC0",
   "endpoint": "https://query.wikidata.org/sparql",
-  "fetched_at": "2026-10-30T08:42:15Z",
+  "fetched_at": "2026-10-30T09:19:11Z",
   "n_without_coords": 0,
   "n_without_population": 0,
-  "query": "SELECT ?city ?cityLabel ?oktmo ?coord WHERE {\n  ?city wdt:P31 wd:Q7930989 ;\n        wdt:P17 wd:Q159 ;\n        wdt:P764 ?oktmo .\n  OPTIONAL { ?city wdt:P625 ?coord . }\n  SERVICE wikibase:label { bd:serviceParam wikibase:language \"ru,en\". }\n}"
+  "coverage_counts": {
+    "p17_russia": 1061,
+    "oktmo_only": 7
+  },
+  "excluded": {
+    "Q165413": "Байконур: территория Республики Казахстан, арендованная Российской Федерацией"
+  },
+  "query": "SELECT ?city ?cityLabel ?oktmo ?coverage ?coord WHERE {\n  hint:Query hint:optimizer \"None\" .\n  {\n    ?city wdt:P31 wd:Q7930989 ;\n          wdt:P17 wd:Q159 ;\n          wdt:P764 ?oktmo .\n    BIND(\"p17_russia\" AS ?coverage)\n  } UNION {\n    ?city wdt:P764 ?oktmo .\n    FILTER NOT EXISTS { ?city wdt:P17 wd:Q159 . }\n    ?city wdt:P31/wdt:P279* wd:Q7930989 .\n    BIND(\"oktmo_only\" AS ?coverage)\n  }\n  OPTIONAL { ?city wdt:P625 ?coord . }\n  SERVICE wikibase:label { bd:serviceParam wikibase:language \"ru,en\". }\n}"
 }
