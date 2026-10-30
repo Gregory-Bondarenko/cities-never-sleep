@@ -11,6 +11,7 @@ from citiesneversleep.metrics.trends import (
     log_trend,
     mann_kendall_p,
     national_index,
+    point_source_growth,
     sen_slope,
 )
 
@@ -136,3 +137,10 @@ def test_stratified_index_removes_level_dependent_drift():
     assert t.loc["D_fast", "lights_class"] == "растёт"
     assert t.loc["D3", "lights_class_national"] == "растёт"  # без страт дрейф виден как рост
     assert t.loc["B3", "lights_class_national"] == "гаснет"
+
+
+def test_point_source_growth():
+    g = pd.DataFrame({"year": YEARS, "max_radiance": [100.0] * 6 + [3000.0] * 7})
+    assert point_source_growth(g)
+    assert not point_source_growth(g.assign(max_radiance=100.0))
+    assert not point_source_growth(g.iloc[:4])

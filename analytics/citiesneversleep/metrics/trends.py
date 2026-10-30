@@ -29,7 +29,10 @@ MIN_YEARS_POPULATION = 5
 ALPHA = 0.05
 STABLE_BAND = 0.01  # |изменение| < 1% в год считается стабильностью
 SEAM_LAST_YEAR = 2021  # последний год до смены шкалы VNL (#10)
-SCHEMA_VERSION = "1.1.0"
+SCHEMA_VERSION = "1.2.0"
+# Точечный источник: медиана максимальной яркости за последние 3 года выше
+# медианы за первые 3 года более чем в 10 раз (новый промышленный объект, факел).
+POINT_SOURCE_RATIO = 10.0
 N_STRATA = 10  # децили медианной яркости (ADR-0008)
 MIN_CITIES_PER_STRATUM = 30  # при меньшей выборке страт становится меньше
 
@@ -127,7 +130,7 @@ def stratified_index(lights: pd.DataFrame, strata: pd.Series, column: str = "sol
     return pd.DataFrame(out).T
 
 
-def _relative(lights: pd.DataFrame, column: str, strata: pd.Series | None) -> pd.Series:
+def relative_series(lights: pd.DataFrame, column: str, strata: pd.Series | None) -> pd.Series:
     """Ряд column, делённый на индекс (национальный или своей страты)."""
     if strata is None:
         idx = np.exp(national_index(lights, column))
@@ -156,9 +159,9 @@ def city_trends(lights: pd.DataFrame, population: pd.DataFrame) -> pd.DataFrame:
 
     strata = brightness_strata(lights)
     lights = lights.assign(
-        sol_rel=_relative(lights, "sol", strata),
-        sol_r2_rel=_relative(lights, "sol_r2", strata),
-        sol_nat=_relative(lights, "sol", None),
+        sol_rel=relative_series(lights, "sol", strata),
+        sol_r2_rel=relative_series(lights, "sol_r2", strata),
+        sol_nat=relative_series(lights, "sol", None),
     )
 
     rows = []
@@ -195,6 +198,7 @@ def city_trends(lights: pd.DataFrame, population: pd.DataFrame) -> pd.DataFrame:
                 "population_p_value": t_pop.p_value,
                 "population_class": classify(t_pop),
                 "any_flag_nan": bool(g["flag_nan"].fillna(False).any()),
+                "flag_point_source": point_source_growth(g),
                 "any_flag_near_cap": bool(g["flag_near_cap"].fillna(False).any()),
             }
         )
@@ -203,6 +207,15 @@ def city_trends(lights: pd.DataFrame, population: pd.DataFrame) -> pd.DataFrame:
         quadrant(a, b) for a, b in zip(out["lights_class"], out["population_class"], strict=True)
     ]
     return out
+
+
+def point_source_growth(g: pd.DataFrame) -> bool:
+    """Рост максимальной яркости пикселя более чем в POINT_SOURCE_RATIO раз."""
+    if "max_radiance" not in g or g["max_radiance"].notna().sum() < 6:
+        return False
+    m = g.sort_values("year")["max_radiance"].dropna()
+    first, last = m.iloc[:3].median(), m.iloc[-3:].median()
+    return bool(first > 0 and last / first > POINT_SOURCE_RATIO)
 
 
 def quadrant(lights_class: str, population_class: str) -> str:
@@ -251,6 +264,8 @@ def build_city_trends(dest_dir=None):
         stable_band_pct_per_year=STABLE_BAND * 100,
         lights_class_counts=trends["lights_class"].value_counts().to_dict(),
         lights_class_national_counts=trends["lights_class_national"].value_counts().to_dict(),
+        point_source_ratio=POINT_SOURCE_RATIO,
+        n_flag_point_source=int(trends["flag_point_source"].sum()),
         population_class_counts=trends["population_class"].value_counts().to_dict(),
     )
     write_meta(dest_dir / "city_trends.meta.json", meta)
