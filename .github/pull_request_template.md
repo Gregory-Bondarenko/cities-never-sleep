@@ -19,7 +19,7 @@ Closes #
 
 ## Проверка
 
-- [ ] `uv run ruff check analytics tests`
+- [ ] `uv run ruff check analytics tests scripts`
 - [ ] `uv run pytest -q`
 - [ ] Ручная проверка (описать команды и результат):
 

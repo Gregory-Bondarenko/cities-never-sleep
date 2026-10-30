@@ -77,12 +77,16 @@ docs: архитектура и дорожная карта
 
 ```bash
 uv sync --all-extras
-uv run ruff check analytics tests
+uv run ruff check analytics tests scripts
 uv run pytest -q
 uv run cns version
 uv run cns fetch-vnl --dry-run --years 2013
 uv run cns fetch-pop --dry-run
 ```
+
+## Пробный прогон
+
+Полный прогон загрузки и обрезки за один год запускается на раннере GitHub: Actions → smoke → Run workflow, параметр `year`. Сводка появляется в отчёте запуска и в артефакте `smoke-report-<год>`. Прогон обязателен перед выпуском минорной версии.
 
 ## Архитектурные правила
 

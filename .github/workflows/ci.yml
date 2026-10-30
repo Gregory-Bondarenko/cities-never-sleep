@@ -28,7 +28,7 @@ jobs:
         run: uv sync --all-extras --frozen
 
       - name: Ruff
-        run: uv run ruff check analytics tests
+        run: uv run ruff check analytics tests scripts
 
       - name: Pytest
         run: uv run pytest -q

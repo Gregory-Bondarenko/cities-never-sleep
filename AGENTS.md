@@ -19,7 +19,7 @@
 2. Имя ветки: `<тип>/<кратко>`, типы перечислены в [CONTRIBUTING.md](CONTRIBUTING.md).
 3. Сообщения коммитов и заголовок PR по Conventional Commits: `feat(analytics): ...`, `fix(pop): ...`, `docs: ...`.
 4. Изменение, заметное пользователю или влияющее на данные, сопровождается записью в `CHANGELOG.md` в разделе `[Unreleased]`.
-5. Перед открытием PR должны проходить `uv run ruff check analytics tests` и `uv run pytest -q`.
+5. Перед открытием PR должны проходить `uv run ruff check analytics tests scripts` и `uv run pytest -q`.
 6. Решение, которое меняет архитектуру, стек или контракт данных, оформляется как ADR в `docs/adr/`.
 7. Задача должна быть связана с issue; в описании PR указывается `Closes #N`.
 
