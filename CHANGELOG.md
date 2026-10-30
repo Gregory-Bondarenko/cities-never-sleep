@@ -21,6 +21,10 @@
 - Workflow `data-refresh`: выгрузка данных на раннере GitHub с пушем в отдельную ветку для PR.
 - Зональная статистика `metrics/zonal.py` и команда `cns build-lights`: набор `lights/city_lights` (схема 1.0.0), сумма излучения с весом площади пикселя в кругах 0,5·r, r и 2·r, флаги пропусков и значений у предела хранения; источник `lights` в `data-refresh`.
 
+### Fixed
+
+- Запрос городов по ADR-0006 падал по таймауту Wikidata из-за обхода всех подклассов «города»; порядок выполнения задан явно. Workflow `data-refresh` теперь не скрывает ошибку команды.
+
 ### Changed
 
 - **Несовместимо:** набор `population/ru_cities_population` переведён на схему 1.0.0. Столбец `wikidata_id` переименован в `city_id`, добавлен `oktmo_status`, метаданные приведены к контракту (`schema_version`, `built_at`, `package_version`, `fetched_at`); вместо полного списка лет хранятся `year_min`, `year_max`, `n_years` (#6, #8).
