@@ -28,7 +28,11 @@ def _pop_summary(df) -> str:
     if not len(df):
         return "0 строк"
     invalid = df.loc[df["oktmo_status"] == "invalid", "city_id"].nunique()
-    return f"{len(df)} строк, {df['city_id'].nunique()} городов, некорректный ОКТМО у {invalid}"
+    conflicts = int(df.loc[df["is_primary"], "is_conflict"].sum())
+    return (
+        f"{len(df)} строк, {df['city_id'].nunique()} городов, "
+        f"некорректный ОКТМО у {invalid}, лет с расхождением значений {conflicts}"
+    )
 
 
 @app.callback()
@@ -85,7 +89,7 @@ def fetch_pop(
         False, "--dry-run", help="Проверить SPARQL, не писать файлы"
     ),
 ) -> None:
-    """Скачать население городов РФ из Wikidata SPARQL."""
+    """Скачать население и справочник городов РФ из Wikidata SPARQL."""
     from citiesneversleep.sources.wikidata_pop import (
         fetch_and_save,
         fetch_sparql,
@@ -98,8 +102,12 @@ def fetch_pop(
         console.print(f"[bold]Wikidata[/bold]: {_pop_summary(df)}")
         return
 
-    parquet_path, csv_path, df = fetch_and_save()
-    console.print(f"Сохранено: {_pop_summary(df)} →\n  {parquet_path}\n  {csv_path}")
+    population, cities = fetch_and_save()
+    no_coords = int(cities["lat"].isna().sum())
+    console.print(
+        f"Население: {_pop_summary(population)}\n"
+        f"Справочник городов: {len(cities)}, без координат {no_coords}"
+    )
 
 
 @app.command("process-vnl")

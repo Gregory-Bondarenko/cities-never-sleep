@@ -22,9 +22,10 @@
 | | |
 |---|---|
 | Источник | [Wikidata SPARQL](https://query.wikidata.org/) |
-| Что запрашивается | города РФ (`P31` = Q7930989, `P17` = Россия) с ОКТМО (`P764`), рядом численности `P1082` и датой `P585` |
+| Что запрашивается | города РФ (`P31` = Q7930989, `P17` = Россия) с ОКТМО (`P764`): ряд численности `P1082` с рангом утверждения, датой `P585` и способом определения `P459`; координаты `P625` |
 | Лицензия | Wikidata под CC0, исходные значения из бюллетеней Росстата |
-| Локально | `data/processed/population/ru_cities_population.{parquet,csv}` |
+| Локально | `data/processed/population/ru_cities_population.{parquet,csv}`, `data/processed/cities/ru_cities.{parquet,csv}` |
+| Обновление | workflow `data-refresh` на раннере GitHub пушит ветку `data/refresh-…`, изменения попадают в `main` через PR |
 
 Сайты Росстата часто недоступны с зарубежных IP, поэтому для MVP выбрана Wikidata ([ADR-0002](adr/0002-population-from-wikidata.md)). Ручные выгрузки XLSX для сверки хранятся в `data/manual/`.
 
