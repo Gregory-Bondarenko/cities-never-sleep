@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0.0",
+  "source": "Wikidata SPARQL",
+  "built_at": "2026-10-30T08:43:10Z",
+  "package_version": "0.2.0-dev",
+  "n_rows": 1061,
+  "license_note": "Wikidata: CC0",
+  "endpoint": "https://query.wikidata.org/sparql",
+  "fetched_at": "2026-10-30T08:42:15Z",
+  "n_without_coords": 0,
+  "n_without_population": 0,
+  "query": "SELECT ?city ?cityLabel ?oktmo ?coord WHERE {\n  ?city wdt:P31 wd:Q7930989 ;\n        wdt:P17 wd:Q159 ;\n        wdt:P764 ?oktmo .\n  OPTIONAL { ?city wdt:P625 ?coord . }\n  SERVICE wikibase:label { bd:serviceParam wikibase:language \"ru,en\". }\n}"
+}
