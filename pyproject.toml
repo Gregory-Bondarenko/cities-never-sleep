@@ -1,6 +1,6 @@
 [project]
 name = "cities-never-sleep"
-version = "0.3.0"
+version = "0.4.0.dev0"
 description = "Города не спят / Cities Never Sleep — динамика ночной освещённости городов России по VIIRS и сравнение с населением"
 readme = "README.md"
 license = { text = "MIT" }
