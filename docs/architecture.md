@@ -114,6 +114,10 @@
 | `lightmap_<год>.png` | ночной снимок, максимум по блокам 10×10, логарифмическая шкала | `cns export-lightmap --year` на раннере (`data-refresh`, источник `lightmap`) |
 | `coastline.json` | береговые линии суши Natural Earth 1:50m в рамке России, без политических границ | `node scripts/coastline.mjs` |
 
+### Витрина `web/`
+
+Одна страница `web/src/index.html` на three.js без сборщика (ADR-0009). `web/build.py` копирует страницу и выгрузки в `web/dist/` (`data/cities.json`, `data/coastline.json`, последний снимок как `data/lightmap.png` с метаданными). Страница проверяет MAJOR схемы `cities.json` и при несовпадении показывает сообщение вместо сцены. Публикация на GitHub Pages: workflow `pages` при изменении `web/**` или `analytics/exports/**` в `main`.
+
 Радиус кругового контура вычисляется из `population_latest` функцией `process/boundaries.radius_km` (ADR-0005) и в справочнике не хранится.
 
 ## Текущее состояние (v0.1.0)
