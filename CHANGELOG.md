@@ -6,6 +6,10 @@
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-02
+
+Веха «Витрина»: сайт с сюжетом по данным и свободным исследованием городов опубликован на GitHub Pages (<https://gregory-bondarenko.ru/cities-never-sleep/>).
+
 ### Added
 
 - Выгрузка для витрины, схема 1.1.0: изменения год к году `yoy` по городам и блок `story.jump` с медианой и долей растущих городов; расчёты перенесены из витрины в аналитику (ADR-0001).
@@ -86,7 +90,8 @@
 - `CONTRIBUTING.md`: префиксы веток, Conventional Commits, squash merge, порядок релиза; исправлен путь к `__init__.py`.
 - `README.md`: навигация по документации, значок CI.
 
-[Unreleased]: https://github.com/Gregory-Bondarenko/cities-never-sleep/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/Gregory-Bondarenko/cities-never-sleep/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/Gregory-Bondarenko/cities-never-sleep/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/Gregory-Bondarenko/cities-never-sleep/releases/tag/v0.4.0
 [0.3.0]: https://github.com/Gregory-Bondarenko/cities-never-sleep/releases/tag/v0.3.0
 [0.1.0]: https://github.com/Gregory-Bondarenko/cities-never-sleep/releases/tag/v0.1.0
