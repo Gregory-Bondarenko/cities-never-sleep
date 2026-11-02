@@ -9,109 +9,101 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geologica:wght,SHRP@200..700,0..100&display=swap" rel="stylesheet">
 <style>
-:root{
-  --black:#000;
-  --sodium:#e89a4e;
-  --led:#e6eef5;
-  --graphite:#7a8087;
-  --bone:#c9c4ba;
-  --dim:#8d8a84;
-  --ease:cubic-bezier(.16,1,.3,1);
-}
+:root{--sodium:#e89a4e;--led:#e6eef5;--graphite:#8a9097;--bone:#c9c4ba;--dim:#8d8a84;--ease:cubic-bezier(.16,1,.3,1)}
 *{box-sizing:border-box}
-html{background:var(--black);color:var(--bone);font-family:"Geologica",system-ui,sans-serif;font-variation-settings:"SHRP" 0;-webkit-font-smoothing:antialiased}
+html{background:#000;color:var(--bone);font-family:"Geologica",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 body{margin:0}
-canvas#scene{position:fixed;inset:0;width:100%;height:100%;display:block;outline:none}
-.veil{position:fixed;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(0,0,0,.86) 0,rgba(0,0,0,.6) 30%,rgba(0,0,0,0) 52%)}
+canvas#scene{position:fixed;inset:0;width:100%;height:100%;display:block}
+.veil{position:fixed;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(0,0,0,.88) 0,rgba(0,0,0,.62) 30%,rgba(0,0,0,0) 50%)}
 main{position:relative}
 section.ch{min-height:100dvh;display:flex;align-items:center;padding:0 clamp(20px,6vw,96px)}
 section.ch.tall{min-height:240dvh;align-items:flex-start}
 section.ch.tall .copy{position:sticky;top:calc(50dvh - 120px)}
-.copy{max-width:34rem;pointer-events:auto}
+.copy{max-width:34rem}
 h1{margin:0;font-weight:250;font-size:clamp(48px,8.4vw,128px);line-height:.95;letter-spacing:-.035em;font-variation-settings:"SHRP" 100;color:var(--led)}
 h2{margin:0 0 20px;font-weight:300;font-size:clamp(28px,3.4vw,46px);line-height:1.08;letter-spacing:-.02em;color:var(--led);font-variation-settings:"SHRP" 60}
-p{margin:0;font-weight:300;font-size:clamp(16px,1.25vw,19px);line-height:1.55;color:var(--bone);max-width:32em}
+p{margin:0;font-weight:300;font-size:clamp(16px,1.25vw,19px);line-height:1.55;max-width:32em}
 p+p{margin-top:14px}
 .lead{margin-top:28px;max-width:26em}
 .num{font-variant-numeric:tabular-nums;color:var(--led);font-weight:400}
 .sodium{color:var(--sodium)}
-.led{color:var(--led)}
 .actions{display:flex;gap:12px;margin-top:40px;flex-wrap:wrap}
-.btn{appearance:none;border:1px solid rgba(230,238,245,.28);background:transparent;color:var(--led);font:inherit;font-weight:400;font-size:15px;padding:13px 22px;border-radius:999px;cursor:pointer;text-decoration:none;transition:border-color .3s var(--ease),background .3s var(--ease),transform .15s}
+.btn{appearance:none;border:1px solid rgba(230,238,245,.28);background:transparent;color:var(--led);font:inherit;font-size:15px;padding:13px 22px;border-radius:999px;cursor:pointer;text-decoration:none;transition:border-color .3s var(--ease),background .3s var(--ease)}
 .btn:hover{border-color:var(--led);background:rgba(230,238,245,.06)}
 .btn:active{transform:scale(.98)}
 .btn.solid{background:var(--led);color:#000;border-color:var(--led)}
-.btn.solid:hover{background:#fff}
+.btn[aria-pressed="true"]{background:rgba(230,238,245,.12);border-color:var(--led)}
 :focus-visible{outline:2px solid var(--sodium);outline-offset:3px}
 
-/* год: состояние сцены, не украшение */
 .year{position:fixed;right:clamp(20px,5vw,72px);bottom:clamp(20px,5vh,56px);font-weight:200;font-size:clamp(56px,9vw,148px);line-height:.8;letter-spacing:-.05em;color:rgba(230,238,245,.9);font-variant-numeric:tabular-nums;font-variation-settings:"SHRP" 100;pointer-events:none;transition:opacity .6s var(--ease)}
-.year[hidden]{display:block;opacity:0}
-.legend{position:fixed;right:clamp(20px,5vw,72px);top:clamp(20px,4vh,40px);display:flex;gap:22px;font-size:13px;color:var(--dim);transition:opacity .6s var(--ease)}
-.legend[hidden]{display:flex;opacity:0;pointer-events:none}
+.legend{position:fixed;right:clamp(20px,5vw,72px);top:clamp(20px,4vh,40px);display:flex;gap:22px;font-size:13px;color:var(--dim);transition:opacity .6s var(--ease);pointer-events:none}
 .legend span{display:inline-flex;align-items:center;gap:8px}
-.legend i{width:3px;height:14px;display:inline-block}
+.legend i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.hide{opacity:0!important}
 
-/* исследование */
+/* подписи в сцене */
+.labels{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+.lbl{position:absolute;left:0;top:0;white-space:nowrap;font-size:13px;color:rgba(201,196,186,.85);transition:opacity .5s var(--ease);will-change:transform}
+.lbl.city{font-size:12px;color:rgba(230,238,245,.78)}
+.lbl.city::before{content:"";position:absolute;left:-7px;top:50%;width:3px;height:1px;background:rgba(230,238,245,.5)}
+.lbl.axis{color:var(--dim);font-variant-numeric:tabular-nums}
+.lbl.title{color:var(--bone);font-size:14px}
+.lbl.quad{color:rgba(141,138,132,.9);font-size:12px;max-width:14em;white-space:normal;line-height:1.35}
+.lbl.big{color:var(--led);font-size:15px}
+
 .explore{min-height:100dvh;display:grid;grid-template-columns:minmax(0,26rem) 1fr;align-items:start;padding:clamp(80px,14vh,140px) clamp(20px,6vw,96px) 48px;gap:24px;pointer-events:none}
 .explore>*{pointer-events:auto}
 .search label{display:block;font-size:14px;color:var(--dim);margin-bottom:10px}
-.search input{width:100%;background:rgba(0,0,0,.55);border:1px solid rgba(230,238,245,.22);border-radius:999px;color:var(--led);font:inherit;font-size:17px;font-weight:300;padding:14px 20px;outline:none;transition:border-color .3s}
+.search input{width:100%;background:rgba(0,0,0,.6);border:1px solid rgba(230,238,245,.22);border-radius:999px;color:var(--led);font:inherit;font-size:17px;font-weight:300;padding:14px 20px;outline:none}
 .search input:focus{border-color:var(--led)}
-.search input::placeholder{color:#77746f}
-.results{list-style:none;margin:10px 0 0;padding:6px 0;max-height:40dvh;overflow:auto;background:rgba(0,0,0,.78);border-radius:22px}
+.search input::placeholder{color:#7a7772}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.filters .btn{font-size:14px;padding:9px 16px}
+.results{list-style:none;margin:10px 0 0;padding:6px 0;max-height:36dvh;overflow:auto;background:rgba(0,0,0,.8);border-radius:22px}
 .results:empty{display:none}
-.results button{all:unset;display:flex;justify-content:space-between;gap:16px;width:100%;box-sizing:border-box;padding:10px 20px;border-radius:999px;cursor:pointer;color:var(--bone);font-size:15px}
-.results button:hover,.results button:focus-visible{background:rgba(230,238,245,.07);outline:none}
+.results button{all:unset;display:flex;justify-content:space-between;gap:16px;width:100%;box-sizing:border-box;padding:10px 20px;border-radius:999px;cursor:pointer;font-size:15px}
+.results button:hover,.results button:focus-visible{background:rgba(230,238,245,.07)}
 .results small{color:var(--dim);font-variant-numeric:tabular-nums}
 .empty{color:var(--dim);font-size:15px;padding:10px 20px}
 
-.card{position:fixed;right:clamp(20px,5vw,72px);bottom:clamp(20px,5vh,56px);width:min(420px,calc(100vw - 40px));background:rgba(0,0,0,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(230,238,245,.14);border-radius:20px;padding:26px 26px 22px;transform:translateY(12px);opacity:0;pointer-events:none;transition:opacity .45s var(--ease),transform .45s var(--ease)}
+.card{position:fixed;right:clamp(20px,5vw,72px);bottom:clamp(20px,5vh,56px);width:min(420px,calc(100vw - 40px));background:rgba(0,0,0,.84);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(230,238,245,.14);border-radius:20px;padding:26px 26px 22px;transform:translateY(12px);opacity:0;pointer-events:none;transition:opacity .45s var(--ease),transform .45s var(--ease)}
 .card.open{opacity:1;transform:none;pointer-events:auto}
 .card h3{margin:0;font-weight:350;font-size:28px;letter-spacing:-.015em;color:var(--led)}
 .card .meta{margin-top:6px;color:var(--dim);font-size:14px;font-variant-numeric:tabular-nums}
 .card .verdict{margin-top:18px;font-size:16px;line-height:1.5;font-weight:300}
 .card svg{display:block;width:100%;height:auto;margin-top:18px}
-.card .axis{display:flex;justify-content:space-between;color:var(--dim);font-size:12px;margin-top:6px;font-variant-numeric:tabular-nums}
+.card .axis{display:flex;justify-content:space-between;color:var(--dim);font-size:12px;margin-top:6px}
 .card .note{margin-top:14px;font-size:13px;color:var(--dim);line-height:1.5}
+.card .note:empty{display:none}
 .card .close{position:absolute;top:14px;right:14px;width:44px;height:44px;border-radius:999px;border:0;background:transparent;color:var(--dim);cursor:pointer;display:grid;place-items:center}
 .card .close:hover{color:var(--led);background:rgba(230,238,245,.07)}
-
-.tip{position:fixed;left:0;top:0;padding:7px 12px;border-radius:999px;background:rgba(0,0,0,.8);border:1px solid rgba(230,238,245,.16);color:var(--led);font-size:13px;pointer-events:none;opacity:0;transition:opacity .2s;white-space:nowrap}
-
-.pin{position:fixed;left:0;top:0;color:var(--led);font-size:14px;font-weight:400;pointer-events:none;opacity:0;transition:opacity .5s var(--ease);white-space:nowrap;padding-left:14px;border-left:1px solid rgba(230,238,245,.5)}
+.tip{position:fixed;left:0;top:0;padding:7px 12px;border-radius:999px;background:rgba(0,0,0,.85);border:1px solid rgba(230,238,245,.16);color:var(--led);font-size:13px;pointer-events:none;opacity:0;transition:opacity .2s;white-space:nowrap}
 footer{position:relative;padding:48px clamp(20px,6vw,96px) 40px;color:var(--dim);font-size:13px;line-height:1.7;display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;background:linear-gradient(0deg,#000 60%,rgba(0,0,0,0))}
 footer a{color:var(--bone)}
-footer a:hover{color:var(--led)}
-
-.loading{position:fixed;inset:0;display:grid;place-items:center;color:var(--dim);font-size:14px;transition:opacity .8s var(--ease)}
-.loading.done{opacity:0;pointer-events:none}
 .fallback{display:none;position:fixed;left:clamp(20px,6vw,96px);bottom:40px;color:var(--dim);font-size:14px;max-width:32em}
-
-@media (max-width:767px){
-  .veil{background:linear-gradient(0deg,rgba(0,0,0,.8) 0,rgba(0,0,0,.35) 45%,rgba(0,0,0,0) 70%)}
-  section.ch{align-items:flex-end;padding-bottom:18dvh}
-  section.ch.tall .copy{top:auto;bottom:12dvh}
+@media (max-width:899px){
+  .veil{background:linear-gradient(0deg,rgba(0,0,0,.88) 0,rgba(0,0,0,.4) 45%,rgba(0,0,0,0) 70%)}
+  section.ch{align-items:flex-end;padding-bottom:16dvh}
+  section.ch.tall .copy{top:auto;bottom:10dvh}
   .explore{grid-template-columns:1fr}
-  .legend{gap:14px;font-size:12px}
-  .year{font-size:64px;bottom:auto;top:64px}
+  .legend{gap:12px;font-size:12px;left:20px;right:auto}
+  .year{font-size:64px;bottom:auto;top:56px}
+  .lbl.quad{display:none}
 }
-@media (prefers-reduced-motion:reduce){
-  *{transition:none!important}
-}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}
 </script>
 </head>
 <body>
-<canvas id="scene" tabindex="-1" aria-label="Трёхмерная карта ночной яркости городов России"></canvas>
+<canvas id="scene" aria-label="Карта и графики ночной яркости городов России"></canvas>
 <div class="veil" aria-hidden="true"></div>
-<div class="loading" id="loading">Загружаю сцену</div>
-<p class="fallback" id="fallback">Браузер не поддерживает WebGL, поэтому трёхмерная сцена недоступна. Текст и поиск по городам работают.</p>
+<div class="labels" id="labels" aria-hidden="true"></div>
+<p class="fallback" id="fallback">Браузер не поддерживает WebGL, поэтому сцена недоступна. Текст и поиск по городам работают.</p>
 
-<div class="year" id="year" hidden aria-live="polite">2012</div>
-<div class="legend" id="legend" hidden>
+<div class="year hide" id="year" aria-live="polite">2012</div>
+<div class="legend hide" id="legend">
   <span><i style="background:var(--led)"></i>светлеет быстрее похожих</span>
   <span><i style="background:var(--graphite)"></i>на уровне</span>
   <span><i style="background:var(--sodium)"></i>темнеет</span>
@@ -132,35 +124,37 @@ footer a:hover{color:var(--led)}
   <section class="ch tall" id="story" data-step="growth">
     <div class="copy">
       <h2>Страна светлеет на <span class="num">37%</span></h2>
-      <p>Так выглядят данные без поправок. Высота столба показывает яркость города, и за двенадцать лет растёт почти каждый: положительный тренд у <span class="num">82%</span> городов.</p>
+      <p>Каждая точка это город, размер показывает его ночную яркость. Если смотреть на данные без поправок, за двенадцать лет растёт почти каждый: положительный тренд у <span class="num">82%</span> городов.</p>
     </div>
   </section>
 
-  <section class="ch" data-step="step2021">
+  <section class="ch" data-step="jump">
     <div class="copy">
       <h2>Только рост случился за один год</h2>
-      <p>В 2021 году яркость подскочила сразу у <span class="num">90%</span> городов. Так синхронно города не меняются, вероятно, изменилась обработка снимков.</p>
+      <p>Сравним, как менялась яркость городов от года к году. С 2019 на 2020 год медианный город потускнел на <span class="num">2%</span>. С 2020 на 2021 год вырос на <span class="num">30%</span>, и так сделали <span class="num">90%</span> городов сразу.</p>
+      <p>Так синхронно города не меняются. Вероятно, изменилась обработка снимков.</p>
     </div>
   </section>
 
   <section class="ch" data-step="relative">
     <div class="copy">
       <h2>Сравним каждый город с похожими</h2>
-      <p>Убираем общий для всех сдвиг и смотрим, кто светлеет быстрее городов той же яркости. <span class="led num">207</span> городов светлеют, <span class="sodium num">232</span> темнеют, <span class="num">628</span> держатся на уровне.</p>
+      <p>Уберём сдвиг, общий для городов той же яркости, и посмотрим, кто меняется быстрее остальных. <span class="led num">207</span> городов светлеют, <span class="sodium num">232</span> темнеют, <span class="num">628</span> держатся на уровне.</p>
     </div>
   </section>
 
   <section class="ch" data-step="people">
     <div class="copy">
       <h2>Свет не следует за людьми</h2>
-      <p>Подсвечены <span class="num">288</span> городов, где население сокращается. <span class="num">170</span> из них светят как прежде. Связь динамики света и населения почти нулевая: ранговая корреляция <span class="num">0,10</span>.</p>
+      <p>По горизонтали изменение населения, по вертикали изменение яркости, оба в процентах в год. Если бы свет следовал за людьми, облако вытянулось бы по диагонали. Оно круглое: ранговая корреляция <span class="num">0,10</span>.</p>
+      <p>Из <span class="num">288</span> городов, где население сокращается, <span class="num">170</span> светят как прежде.</p>
     </div>
   </section>
 
   <section class="ch" data-step="point">
     <div class="copy">
       <h2>Иногда весь рост даёт один объект</h2>
-      <p>Волжский светлеет на <span class="num">21%</span> в год. Самый яркий пиксель города вырос со <span class="num">153</span> до <span class="num">10 643</span> единиц: это новый промышленный источник, а не новые улицы. Таких городов в данных <span class="num">18</span>.</p>
+      <p>У <span class="num">18</span> городов самый яркий пиксель вырос больше чем в 10 раз. В Волжском он вырос со <span class="num">153</span> до <span class="num">10 643</span> единиц: это новый промышленный источник, а не новые улицы.</p>
     </div>
   </section>
 
@@ -168,12 +162,18 @@ footer a:hover{color:var(--led)}
     <div class="search">
       <label for="q">Город</label>
       <input id="q" type="search" placeholder="Например, Томск" autocomplete="off">
+      <div class="filters" role="group" aria-label="Показать города">
+        <button class="btn" data-f="all" aria-pressed="true">Все</button>
+        <button class="btn" data-f="1" aria-pressed="false">Светлеют</button>
+        <button class="btn" data-f="-1" aria-pressed="false">Темнеют</button>
+        <button class="btn" data-f="0" aria-pressed="false">На уровне</button>
+      </div>
       <ul class="results" id="results"></ul>
     </div>
   </section>
 
   <footer>
-    <span>Данные: VIIRS VNL V2.1 (OpenGeoHub, CC-BY 4.0), население из Wikidata (CC0). Классы относительные, подробности в методике.</span>
+    <span>Данные: VIIRS VNL V2.1 (OpenGeoHub, CC-BY 4.0), население из Wikidata (CC0), береговая линия Natural Earth. Классы относительные, подробности в методике.</span>
     <span><a href="https://github.com/Gregory-Bondarenko/cities-never-sleep">Исходный код и методика</a></span>
   </footer>
 </main>
@@ -183,12 +183,11 @@ footer a:hover{color:var(--led)}
   <h3 id="c-name"></h3>
   <div class="meta" id="c-meta"></div>
   <div class="verdict" id="c-verdict"></div>
-  <svg id="c-chart" viewBox="0 0 368 120" role="img" aria-label="График яркости и населения по годам"></svg>
+  <svg id="c-chart" viewBox="0 0 368 120" role="img"></svg>
   <div class="axis"><span>2012</span><span>сплошная: свет, пунктир: население</span><span>2024</span></div>
   <div class="note" id="c-note"></div>
 </aside>
 <div class="tip" id="tip"></div>
-<div class="pin" id="pin" aria-hidden="true"></div>
 
 <script id="data" type="application/json">__DATA__</script>
 <script id="land" type="application/json">__LAND__</script>
@@ -198,275 +197,315 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 const D = JSON.parse(document.getElementById("data").textContent);
-const YEARS = D.years, NY = YEARS.length, INDEX = D.index;
+const YEARS = D.years, NY = YEARS.length;
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const C = D.c.map(r => ({id:r[0],name:r[1],lat:r[2],lon:r[3],pop:r[4],cls:r[5],pct:r[6],pcls:r[7],ppct:r[8],point:r[9],sol:r[10],rel:r[11],pops:r[12],dec:r[13],nat:r[14]}));
 const N = C.length;
 
-/* --- проекция: коническая равноугольная Ламберта для России --- */
+/* --- проекция: коническая Ламберта, x на восток, y на север --- */
 const rad = Math.PI/180, p1=52*rad, p2=64*rad, p0=56*rad, l0=100*rad;
 const n = Math.log(Math.cos(p1)/Math.cos(p2))/Math.log(Math.tan(Math.PI/4+p2/2)/Math.tan(Math.PI/4+p1/2));
 const F = Math.cos(p1)*Math.pow(Math.tan(Math.PI/4+p1/2),n)/n;
 const r0 = F/Math.pow(Math.tan(Math.PI/4+p0/2),n);
-function project(lat, lon){
-  if (lon < 0) lon += 360;
-  const r = F/Math.pow(Math.tan(Math.PI/4+lat*rad/2),n), t = n*(lon*rad-l0);
-  return [r*Math.sin(t)*100, (r0 - r*Math.cos(t))*100];  // x на восток, y на север
-}
-C.forEach(c => { const [x,y] = project(c.lat,c.lon); c.x=x; c.z=-y; });
+function project(lat, lon){ if (lon < 0) lon += 360; const r = F/Math.pow(Math.tan(Math.PI/4+lat*rad/2),n), t = n*(lon*rad-l0); return [r*Math.sin(t)*100, (r0 - r*Math.cos(t))*100]; }
+C.forEach(c => { const [x,y] = project(c.lat,c.lon); c.mx = x; c.mz = -y; });
+const mapBox = C.reduce((b,c)=>({x0:Math.min(b.x0,c.mx),x1:Math.max(b.x1,c.mx),z0:Math.min(b.z0,c.mz),z1:Math.max(b.z1,c.mz)}),{x0:1e9,x1:-1e9,z0:1e9,z1:-1e9});
+const MC = {x:(mapBox.x0+mapBox.x1)/2, z:(mapBox.z0+mapBox.z1)/2};
+const CH = {x:MC.x, z:MC.z};   // центр графиков совпадает с центром карты: точки перестраиваются на месте
 
 /* --- цвета --- */
-const COL = {bone:new THREE.Color("#c9c4ba"), led:new THREE.Color("#e6eef5"), sodium:new THREE.Color("#e89a4e"), graphite:new THREE.Color("#4a4f55"), ghost:new THREE.Color("#111214")};
-function classColor(c){ return c.cls===1?COL.led:c.cls===-1?COL.sodium:COL.graphite; }
+const COL = {bone:new THREE.Color("#ece6da"), led:new THREE.Color("#e6eef5"), sodium:new THREE.Color("#e89a4e"), graphite:new THREE.Color("#7c838a"), ghost:new THREE.Color("#2a2c2f")};
+const classColor = c => c.cls===1?COL.led:c.cls===-1?COL.sodium:COL.graphite;
 
 /* --- сцена --- */
 const canvas = document.getElementById("scene");
 let renderer;
-try { renderer = new THREE.WebGLRenderer({canvas, antialias:true, powerPreference:"high-performance"}); }
-catch(e){ document.getElementById("fallback").style.display="block"; document.getElementById("loading").classList.add("done"); }
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x000000);
-scene.fog = new THREE.Fog(0x000000, 160, 420);
-const camera = new THREE.PerspectiveCamera(32, innerWidth/innerHeight, 0.1, 2000);
+try { renderer = new THREE.WebGLRenderer({canvas, antialias:true}); }
+catch(e){ document.getElementById("fallback").style.display="block"; }
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0x000000);
+const camera = new THREE.PerspectiveCamera(30, innerWidth/innerHeight, 0.5, 3000);
 
-/* сетка широт и долгот: даёт глазу масштаб страны */
-const grid = new THREE.Group();
-const gmat = new THREE.LineBasicMaterial({color:0x101214});
-for (let lon=20; lon<=200; lon+=20){ const pts=[]; for(let lat=40; lat<=78; lat+=1){const [x,y]=project(lat,lon>180?lon-360:lon); pts.push(new THREE.Vector3(x,0,-y));} grid.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),gmat)); }
-for (let lat=40; lat<=75; lat+=5){ const pts=[]; for(let lon=20; lon<=190; lon+=2){const [x,y]=project(lat,lon>180?lon-360:lon); pts.push(new THREE.Vector3(x,0,-y));} grid.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),gmat)); }
-grid.traverse(o => { if (o.material) o.material = gmat; });
-scene.add(grid);
-
-/* береговая линия: слой «суша» Natural Earth, без политических границ */
-const LAND = JSON.parse(document.getElementById("land").textContent);
-const coast = new THREE.Group();
-const cmat = new THREE.LineBasicMaterial({color:0x3a3d42, transparent:true, opacity:1});
-LAND.forEach(line => { const pts = line.map(([lon,lat]) => { const [x,y] = project(lat,lon); return new THREE.Vector3(x,0.02,-y); }); coast.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), cmat)); });
-scene.add(coast);
-
-/* ночной снимок VIIRS как подложка */
+/* ночной снимок как есть, без подкраски */
 const LM = JSON.parse(document.getElementById("lightmap").textContent);
 let lightmat = null;
 if (LM.src){
-  const tex = new THREE.TextureLoader().load(LM.src); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const tex = new THREE.TextureLoader().load(LM.src); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
   const b = LM.bounds, SX = 240, SY = 60, pos = [], uv = [], idx = [];
-  for (let j=0;j<=SY;j++) for (let i=0;i<=SX;i++){
-    const lon = b.west + (b.east-b.west)*i/SX, lat = b.south + (b.north-b.south)*j/SY;
-    const [x,y] = project(lat,lon); pos.push(x,0,-y); uv.push(i/SX, j/SY);
-  }
-  for (let j=0;j<SY;j++) for (let i=0;i<SX;i++){ const a=j*(SX+1)+i, c=a+SX+1; idx.push(a,c,a+1, a+1,c,c+1); }
+  for (let j=0;j<=SY;j++) for (let i=0;i<=SX;i++){ const lon=b.west+(b.east-b.west)*i/SX, lat=b.south+(b.north-b.south)*j/SY; const [x,y]=project(lat,lon); pos.push(x,0,-y); uv.push(i/SX,j/SY); }
+  for (let j=0;j<SY;j++) for (let i=0;i<SX;i++){ const a=j*(SX+1)+i, c=a+SX+1; idx.push(a,c,a+1,a+1,c,c+1); }
   const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos,3)); g.setAttribute("uv", new THREE.Float32BufferAttribute(uv,2)); g.setIndex(idx);
-  lightmat = new THREE.MeshBasicMaterial({map:tex, color:new THREE.Color("#f0c58e"), transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, opacity:1, side:THREE.DoubleSide});
-  const lmesh = new THREE.Mesh(g, lightmat); lmesh.position.y = 0.005; lmesh.renderOrder = -1; scene.add(lmesh);
+  lightmat = new THREE.MeshBasicMaterial({map:tex, color:0x9a9a9a, transparent:true, opacity:0, depthWrite:false, side:THREE.DoubleSide});
+  scene.add(new THREE.Mesh(g, lightmat));
+}
+/* береговая линия */
+const LAND = JSON.parse(document.getElementById("land").textContent);
+const cmat = new THREE.LineBasicMaterial({color:0x4a4d52, transparent:true, opacity:0});
+LAND.forEach(line => { const pts = line.map(([lon,lat]) => { const [x,y] = project(lat,lon); return new THREE.Vector3(x,.02,-y); }); scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), cmat)); });
+
+/* --- точки городов --- */
+const pos = new Float32Array(N*3), col = new Float32Array(N*3), size = new Float32Array(N), alpha = new Float32Array(N);
+const T = {pos:new Float32Array(N*3), col:new Float32Array(N*3), size:new Float32Array(N), alpha:new Float32Array(N)};
+const speed = new Float32Array(N).map(() => .55 + Math.random()*.45);
+C.forEach((c,i) => { pos[i*3]=c.mx; pos[i*3+1]=0; pos[i*3+2]=c.mz; });
+const pgeo = new THREE.BufferGeometry();
+pgeo.setAttribute("position", new THREE.BufferAttribute(pos,3)); pgeo.setAttribute("color", new THREE.BufferAttribute(col,3));
+pgeo.setAttribute("size", new THREE.BufferAttribute(size,1)); pgeo.setAttribute("alpha", new THREE.BufferAttribute(alpha,1));
+const pmat = new THREE.ShaderMaterial({
+  uniforms:{scale:{value:1}},
+  vertexShader:`attribute float size; attribute float alpha; attribute vec3 color; varying vec3 vC; varying float vA;
+    uniform float scale; void main(){ vC=color; vA=alpha; vec4 mv=modelViewMatrix*vec4(position,1.); gl_PointSize=clamp(size*scale/-mv.z, 1.5, 13.); gl_Position=projectionMatrix*mv; }`,
+  fragmentShader:`varying vec3 vC; varying float vA; void main(){ vec2 d=gl_PointCoord-.5; float r=length(d)*2.; if(r>1.) discard;
+    float core=smoothstep(1.,.55,r); gl_FragColor=vec4(vC, vA*core); }`,
+  transparent:true, depthWrite:false
+});
+const points = new THREE.Points(pgeo, pmat); scene.add(points);
+
+/* --- элементы графиков: линии осей --- */
+const chartGroups = {};
+function lines(name, segs, color=0x3a3d41){
+  const g = new THREE.Group(), m = new THREE.LineBasicMaterial({color, transparent:true, opacity:0});
+  segs.forEach(([a,b]) => g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(a[0],.01,a[1]), new THREE.Vector3(b[0],.01,b[1])]), m)));
+  g.userData.mat = m; scene.add(g); chartGroups[name] = g;
 }
 
-/* столбы */
-const geo = new THREE.BoxGeometry(1,1,1); geo.translate(0,.5,0);
-{ const pos = geo.attributes.position, col = new Float32Array(pos.count*3);
-  for (let v=0; v<pos.count; v++){ const y = pos.getY(v); const k = .16 + .84*Math.pow(y,1.6); col[v*3]=col[v*3+1]=col[v*3+2]=k; }
-  geo.setAttribute("color", new THREE.BufferAttribute(col,3)); }
-const mat = new THREE.MeshBasicMaterial({color:0xffffff, vertexColors:true});
-const pillars = new THREE.InstancedMesh(geo, mat, N);
-pillars.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-scene.add(pillars);
+/* --- подписи --- */
+const labelsEl = document.getElementById("labels"), LABELS = [];
+function label(text, x, z, steps, cls="axis", align="center", prio=0){
+  const el = document.createElement("div"); el.className = "lbl "+cls; el.textContent = text; el.style.opacity = 0; labelsEl.appendChild(el);
+  LABELS.push({el, x, z, steps:new Set(steps), align, prio, w:0, h:0}); return LABELS[LABELS.length-1];
+}
 
-/* световые пятна на земле: площадь круга города по ADR-0005 */
-const discTex = (() => { const s=128, cv=document.createElement("canvas"); cv.width=cv.height=s; const g=cv.getContext("2d"); const gr=g.createRadialGradient(s/2,s/2,0,s/2,s/2,s/2); gr.addColorStop(0,"rgba(255,255,255,1)"); gr.addColorStop(.35,"rgba(255,255,255,.35)"); gr.addColorStop(1,"rgba(255,255,255,0)"); g.fillStyle=gr; g.fillRect(0,0,s,s); return new THREE.CanvasTexture(cv); })();
-const dgeo = new THREE.PlaneGeometry(1,1); dgeo.rotateX(-Math.PI/2);
-const dmat = new THREE.MeshBasicMaterial({map:discTex, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending, opacity:.5});
-const discs = new THREE.InstancedMesh(dgeo, dmat, N);
-scene.add(discs);
+/* ======== раскладки ======== */
+const H = v => v>0 ? Math.log10(1+v) : 0;
+const sizeOf = v => .9 + H(v)*1.05;     // размер точки от яркости
 
-const W = 0.17;
-const cur = new Float32Array(N), tgt = new Float32Array(N);
-const curCol = C.map(() => new THREE.Color(0,0,0)), tgtCol = C.map(() => new THREE.Color(0,0,0));
-const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), S = new THREE.Vector3(), P = new THREE.Vector3();
-C.forEach((c,i) => {
-  const r = Math.min(30, Math.max(3, 1.5*Math.sqrt((c.pop||10000)/10000)));
-  const d = r/38;            // радиус круга в единицах сцены
-  M.compose(P.set(c.x,0.01,c.z), Q, S.set(d*2.6,1,d*2.6)); discs.setMatrixAt(i,M);
-  discs.setColorAt(i, new THREE.Color(0,0,0));
-});
+/* 1. Карта */
+const BIG = C.map((c,i)=>i).filter(i=>C[i].pop>=600000).sort((a,b)=>C[b].pop-C[a].pop);
+BIG.forEach(i => label(C[i].name, C[i].mx, C[i].mz, ["intro","relative","explore"], "city", "left", C[i].pop));
 
-const H = v => v>0 ? Math.log10(1+v)*2.5 : 0;
-let year = 0, mode = "raw", focus = null, appear = 0;
-function setTargets(step){
+/* 2. Скачок: две строки «пчелиного роя» изменений год к году */
+const JW = 52, JX0 = CH.x - JW/2, jx = v => JX0 + (Math.max(-.6, Math.min(.9, v)) + .6)/1.5*JW;
+const ROW = {a: CH.z - 11, b: CH.z + 11}, DOT = .5;
+function swarm(values, rowZ){
+  const out = new Array(values.length), bins = new Map();
+  const order = values.map((v,i)=>[v,i]).sort((a,b)=>a[0]-b[0]);
+  order.forEach(([v,i]) => { if (v==null){ out[i]=null; return; } const x = jx(v), key = Math.round(x/DOT); const k = bins.get(key)||0; bins.set(key,k+1);
+    const off = (k%2?1:-1)*Math.ceil(k/2)*DOT*.62; out[i] = [key*DOT, rowZ + Math.max(-9.6, Math.min(9.6, off))]; });
+  return out;
+}
+const lr = (c,a,b) => (c.sol[a]>0 && c.sol[b]>0) ? Math.log(c.sol[b]/c.sol[a]) : null;
+const SW_A = swarm(C.map(c=>lr(c,7,8)), ROW.a), SW_B = swarm(C.map(c=>lr(c,8,9)), ROW.b);
+lines("jump", [[[jx(0),ROW.a-10.5],[jx(0),ROW.b+10.5]], [[JX0,ROW.a+10.6],[JX0+JW,ROW.a+10.6]], [[JX0,ROW.b+10.6],[JX0+JW,ROW.b+10.6]]]);
+lines("jumpMed", [[[jx(Math.log(.979)),ROW.a-10.2],[jx(Math.log(.979)),ROW.a+10.6]], [[jx(Math.log(1.301)),ROW.b-10.2],[jx(Math.log(1.301)),ROW.b+10.6]]], 0xc9c4ba);
+chartGroups.jumpMed.userData.step = "jump";
+[[-.4,"−33%"],[0,"0"],[Math.log(1.5),"+50%"],[Math.log(2),"+100%"]].forEach(([v,t]) => label(t, jx(v), ROW.b+12.2, ["jump"]));
+label("2019 → 2020: медиана −2%", JX0, ROW.a-10.4, ["jump"], "title", "left");
+label("2020 → 2021: медиана +30%", JX0, ROW.b-10.4, ["jump"], "big", "left");
+
+/* 3. Свет и население: диаграмма рассеяния */
+const SW = 46, SHh = 34;
+const sx = v => CH.x + Math.max(-1, Math.min(1, v/0.03))*SW/2;
+const sz = v => CH.z - Math.max(-1, Math.min(1, v/0.12))*SHh/2;
+lines("people", [[[CH.x-SW/2,CH.z],[CH.x+SW/2,CH.z]], [[CH.x,CH.z-SHh/2],[CH.x,CH.z+SHh/2]]]);
+[[-.03,"−3%"],[-.015,"−1,5%"],[.015,"+1,5%"],[.03,"+3%"]].forEach(([v,t]) => label(t, sx(v), CH.z+SHh/2+1.6, ["people"]));
+[[.1,"+10%"],[.05,"+5%"],[0,"0"],[-.05,"−5%"],[-.1,"−10%"]].forEach(([v,t]) => label(t, CH.x-SW/2-1.2, sz(v), ["people"], "axis", "right"));
+label("население в год", CH.x+SW/2, CH.z+SHh/2+3.6, ["people"], "title", "right");
+label("свет относительно похожих, в год", CH.x-SW/2, CH.z-SHh/2-2.4, ["people"], "title", "left");
+label("людей меньше, света больше", CH.x-SW/2+1, CH.z-SHh/2+3, ["people"], "quad", "left");
+label("людей больше, света больше", CH.x+SW/2-1, CH.z-SHh/2+3, ["people"], "quad", "right");
+label("людей меньше, света меньше", CH.x-SW/2+1, CH.z+SHh/2-3, ["people"], "quad", "left");
+label("людей больше, света меньше", CH.x+SW/2-1, CH.z+SHh/2-3, ["people"], "quad", "right");
+const NOPOP_Z = CH.z + SHh/2 + 6;   // города без ряда населения уходят под график и гаснут
+
+/* 4. Точечные источники: подписи на карте */
+C.forEach((c,i) => { if (c.point) label(c.name, c.mx, c.mz, ["point"], c.name==="Волжский"?"big":"city", "left", c.name==="Волжский"?1e9:c.pop); });
+
+/* ======== состояния ======== */
+let step = "intro", year = 0, filter = "all", focus = null;
+function setTargets(){
+  const yi = Math.round(year);
   C.forEach((c,i) => {
-    const yi = Math.round(year), v = c.sol[yi];
-    let h = 0;
-    if (mode === "raw") h = H(v);
-    else h = H(v / INDEX[yi]);
-    tgt[i] = h;
-    let col;
-    if (step==="intro"||step==="growth"||step==="step2021") col = COL.bone;
-    else if (step==="relative"||step==="explore") col = classColor(c);
-    else if (step==="people") col = c.pcls===-1 ? classColor(c) : COL.ghost;
-    else if (step==="point") col = c.point ? COL.led : COL.ghost;
-    else col = COL.bone;
-    if (focus !== null && step==="explore" && i!==focus) col = col.clone().lerp(COL.ghost,.55);
-    tgtCol[i].copy(col);
+    let x = c.mx, z = c.mz, s = sizeOf(c.sol[NY-1]), a = .9, color = COL.bone;
+    if (step==="intro"){ s = sizeOf(c.sol[NY-1]); a=.85; }
+    else if (step==="growth"){ s = sizeOf(c.sol[yi]); a=.9; }
+    else if (step==="jump"){
+      // нижняя строка: сами города; верхняя строка рисуется облаком копий (ghost) ниже
+      const B = SW_B[i]; if (B){ x=B[0]; z=B[1]; } s = 1.15; a = B?.95:0; color = COL.bone; }
+    else if (step==="relative"||step==="explore"){ color = classColor(c); s = sizeOf(c.sol[NY-1]); a = .92;
+      if (step==="explore" && filter!=="all" && String(c.cls)!==filter){ a=.08; }
+      if (step==="explore" && focus!==null && i!==focus) a = Math.min(a,.35); }
+    else if (step==="people"){ color = classColor(c); s = 1.25;
+      if (c.ppct==null || c.pct==null){ x = c.mx; z = c.mz; a = 0; }
+      else { x = sx(c.ppct); z = sz(c.pct); a = c.pcls===-1 ? .95 : .55; } }
+    else if (step==="point"){ color = c.point ? COL.led : COL.ghost; a = c.point ? 1 : .55; s = c.point ? sizeOf(c.sol[NY-1])*1.25 : sizeOf(c.sol[NY-1])*.8; }
+    T.pos[i*3]=x; T.pos[i*3+1]=0.05; T.pos[i*3+2]=z;
+    T.col[i*3]=color.r; T.col[i*3+1]=color.g; T.col[i*3+2]=color.b; T.size[i]=s; T.alpha[i]=a;
   });
 }
+/* верхняя строка «скачка»: отдельное облако копий, чтобы показать оба года одновременно */
+const ghostPos = new Float32Array(N*3), ghostAlpha = new Float32Array(N), ghostSize = new Float32Array(N).fill(1.15), ghostCol = new Float32Array(N*3);
+C.forEach((c,i)=>{ const A=SW_A[i]; ghostPos[i*3]=A?A[0]:c.mx; ghostPos[i*3+1]=.05; ghostPos[i*3+2]=A?A[1]:c.mz; ghostCol.set([.62,.6,.57], i*3); });
+const ggeo = new THREE.BufferGeometry(); ggeo.setAttribute("position", new THREE.BufferAttribute(ghostPos,3)); ggeo.setAttribute("color", new THREE.BufferAttribute(ghostCol,3)); ggeo.setAttribute("size", new THREE.BufferAttribute(ghostSize,1)); ggeo.setAttribute("alpha", new THREE.BufferAttribute(ghostAlpha,1));
+scene.add(new THREE.Points(ggeo, pmat));
 
-/* --- камера по остановкам сюжета --- */
-const center = new THREE.Vector3(); C.forEach(c=>{center.x+=c.x;center.z+=c.z}); center.divideScalar(N);
-const volzh = C.findIndex(c=>c.name==="Волжский");
-const V = C[volzh];
-const SHOTS = {
-  intro:   {pos:[center.x+4, 150, center.z+48], look:[center.x, 0, center.z-10]},
-  growth:  {pos:[center.x-14, 30, center.z+70], look:[center.x-4, 4, center.z-2]},
-  step2021:{pos:[center.x-32, 22, center.z+50], look:[center.x-14, 4, center.z-2]},
-  relative:{pos:[center.x-4, 96, center.z+104], look:[center.x-8, 0, center.z-2]},
-  people:  {pos:[center.x-30, 80, center.z+92], look:[center.x-20, 0, center.z-4]},
-  point:   {pos:[V.x+15, 15, V.z+32], look:[V.x+1, 5, V.z]},
-  explore: {pos:[center.x, 92, center.z+112], look:[center.x-8, 0, center.z-2]},
-};
-const camPos = new THREE.Vector3(...SHOTS.intro.pos), camLook = new THREE.Vector3(...SHOTS.intro.look);
-camera.position.copy(camPos).add(new THREE.Vector3(0,40,60)); camera.lookAt(camLook);
-let step = "intro";
-
-const controls = new OrbitControls(camera, canvas);
-controls.enabled = false; controls.enableDamping = true; controls.dampingFactor = .08;
-controls.maxPolarAngle = Math.PI*0.47; controls.minDistance = 6; controls.maxDistance = 360;
-
-/* --- состояние по прокрутке --- */
-const yearEl = document.getElementById("year"), legend = document.getElementById("legend");
-const sections = [...document.querySelectorAll("[data-step]")];
-const io = new IntersectionObserver(es => {
-  es.forEach(e => { if (e.isIntersecting) enter(e.target.dataset.step); });
-}, {rootMargin:"-45% 0px -45% 0px"});
-sections.forEach(s => io.observe(s));
-function enter(s){
-  if (s===step) return;
-  step = s;
-  mode = (s==="intro"||s==="growth"||s==="step2021") ? "raw" : "rel";
-  if (s==="step2021") year = 9;              // 2021
-  if (s==="relative"||s==="people"||s==="point"||s==="explore") year = NY-1;
-  yearEl.hidden = !(s==="growth"||s==="step2021");
-  legend.hidden = !(s==="relative"||s==="explore");
-  controls.enabled = s==="explore";
-  canvas.style.pointerEvents = s==="explore" ? "auto" : "none";
-  if (s==="explore" && focus===null){ flyTo(new THREE.Vector3(...SHOTS.explore.pos), new THREE.Vector3(...SHOTS.explore.look)); }
-  setTargets(s);
+/* --- камера: кадры подбираются по размеру содержимого --- */
+const isWide = () => innerWidth >= 900;
+function frameFor(cx, cz, halfW, halfH, elev){
+  const fov = camera.fov*rad, aspect = innerWidth/innerHeight;
+  const tanH = Math.tan(fov/2) / (isWide() ? 1 : 1.4);   // на узком экране видна часть увеличенного кадра
+  const fracW = isWide() ? .27 : .44, fracH = isWide() ? .40 : .22;
+  const dH = halfH/(tanH*fracH*2*Math.sin(elev)), dW = halfW/(tanH*aspect*fracW*2);
+  const d = Math.max(dH, dW);
+  const look = new THREE.Vector3(cx, 0, cz);
+  return {pos:new THREE.Vector3(cx, d*Math.sin(elev), cz + d*Math.cos(elev)), look};
 }
-const growthSec = document.getElementById("story");
+const MAPW = (mapBox.x1-mapBox.x0)/2, MAPH = (mapBox.z1-mapBox.z0)/2;
+const V = C[C.findIndex(c=>c.name==="Волжский")];
+function shot(s){
+  switch(s){
+    case "intro":   return frameFor(MC.x, MC.z, MAPW, MAPH, 62*rad);
+    case "growth":  return frameFor(MC.x-14, MC.z+4, MAPW*.55, MAPH*.6, 50*rad);
+    case "jump":    return frameFor(CH.x, CH.z, JW/2+3, 24, 84*rad);
+    case "relative":return frameFor(MC.x, MC.z, MAPW, MAPH, 66*rad);
+    case "people":  return frameFor(CH.x - (isWide()?5:0), CH.z, SW/2+5, SHh/2+5, 86*rad);
+    case "point":   return frameFor(MC.x-6, MC.z, MAPW*.8, MAPH*.8, 70*rad);
+    default:        return frameFor(MC.x, MC.z, MAPW, MAPH, 64*rad);
+  }
+}
+const camPos = new THREE.Vector3(), camLook = new THREE.Vector3();
+{ const s = shot("intro"); camPos.copy(s.pos).add(new THREE.Vector3(0,30,30)); camLook.copy(s.look); }
+const controls = new OrbitControls(camera, canvas);
+controls.enabled = false; controls.enableDamping = true; controls.maxPolarAngle = Math.PI*.42; controls.minDistance = 10; controls.maxDistance = 500;
+let fly = null;
 
-/* --- взаимодействие: наведение и карточка --- */
-const ray = new THREE.Raycaster(), mouse = new THREE.Vector2(), tip = document.getElementById("tip");
+/* --- прокрутка --- */
+const yearEl = document.getElementById("year"), legend = document.getElementById("legend");
+const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) enter(e.target.dataset.step); }), {rootMargin:"-45% 0px -45% 0px"});
+document.querySelectorAll("[data-step]").forEach(s => io.observe(s));
+function enter(s){
+  if (s===step) return; step = s;
+  if (s!=="growth") year = NY-1;
+  yearEl.classList.toggle("hide", s!=="growth");
+  legend.classList.toggle("hide", !(s==="relative"||s==="explore"||s==="people"));
+  controls.enabled = s==="explore"; canvas.style.pointerEvents = s==="explore" ? "auto" : "none";
+  if (s!=="explore"){ fly = null; closeCard(); }
+  else if (focus===null) { const f = shot("explore"); fly = f; }
+  setTargets();
+}
+const story = document.getElementById("story");
+
+/* --- наведение, карточка, поиск, фильтры --- */
+const ray = new THREE.Raycaster(); ray.params.Points.threshold = .8;
+const mouse = new THREE.Vector2(), tip = document.getElementById("tip");
 canvas.addEventListener("pointermove", ev => {
-  mouse.set(ev.clientX/innerWidth*2-1, -(ev.clientY/innerHeight)*2+1);
-  ray.setFromCamera(mouse, camera);
-  const hit = ray.intersectObject(pillars)[0];
-  if (hit){ tip.textContent = C[hit.instanceId].name; tip.style.opacity=1; tip.style.transform=`translate(${ev.clientX+14}px,${ev.clientY-30}px)`; canvas.style.cursor="pointer"; }
+  mouse.set(ev.clientX/innerWidth*2-1, -(ev.clientY/innerHeight)*2+1); ray.setFromCamera(mouse, camera);
+  const hit = ray.intersectObject(points).find(h => alpha[h.index] > .2);
+  if (hit){ tip.textContent = C[hit.index].name; tip.style.opacity=1; tip.style.transform=`translate(${ev.clientX+14}px,${ev.clientY-30}px)`; canvas.style.cursor="pointer"; }
   else { tip.style.opacity=0; canvas.style.cursor=""; }
 });
-canvas.addEventListener("click", () => { ray.setFromCamera(mouse, camera); const hit = ray.intersectObject(pillars)[0]; if (hit) openCity(hit.instanceId); });
-
-const card = document.getElementById("card"), pin = document.getElementById("pin");
-const fmt = new Intl.NumberFormat("ru-RU");
-const pctf = v => (v>0?"+":"")+(v*100).toFixed(1).replace(".",",")+"%";
+canvas.addEventListener("click", () => { ray.setFromCamera(mouse, camera); const hit = ray.intersectObject(points).find(h => alpha[h.index] > .2); if (hit) openCity(hit.index); });
+const card = document.getElementById("card"), fmt = new Intl.NumberFormat("ru-RU");
+const pctf = v => (v>0?"+":"")+(v*100).toFixed(1).replace(".",",").replace("-","−")+"%";
 const CLS = {1:"светлеет быстрее городов той же яркости", 0:"держится на уровне городов той же яркости", "-1":"темнеет относительно городов той же яркости", 9:"данных для оценки тренда недостаточно"};
 const PCLS = {1:"растёт", 0:"стабильно", "-1":"сокращается", 9:"без надёжного ряда"};
+let focusLabel = label("", 0, 0, ["explore"], "big", "left", 2e9);
 function openCity(i){
   focus = i; const c = C[i];
   document.getElementById("c-name").textContent = c.name;
   document.getElementById("c-meta").textContent = c.pop ? `${fmt.format(c.pop)} жителей` : "население неизвестно";
-  let v = `Яркость ${CLS[c.cls]}`;
-  if (c.pct!=null) v += `: ${pctf(c.pct)} в год.`; else v += ".";
-  v += ` Население ${PCLS[c.pcls]}` + (c.ppct!=null ? `, ${pctf(c.ppct)} в год.` : ".");
-  document.getElementById("c-verdict").textContent = v;
-  document.getElementById("c-note").textContent = c.point ? "Внутри контура появился очень яркий объект: максимум яркости пикселя вырос больше чем в 10 раз. Он может определять динамику города сильнее, чем застройка." : "";
-  drawChart(c);
-  card.classList.add("open");
-  const t = new THREE.Vector3(c.x, 2, c.z);
-  flyTo(new THREE.Vector3(c.x+18, 26, c.z+46), t);
-  setTargets(step);
+  document.getElementById("c-verdict").textContent = `Яркость ${CLS[c.cls]}${c.pct!=null?": "+pctf(c.pct)+" в год":""}. Население ${PCLS[c.pcls]}${c.ppct!=null?", "+pctf(c.ppct)+" в год":""}.`;
+  document.getElementById("c-note").textContent = c.point ? "Внутри контура появился очень яркий объект: максимум яркости пикселя вырос больше чем в 10 раз." : "";
+  drawChart(c); card.classList.add("open");
+  focusLabel.el.textContent = c.name; focusLabel.x = c.mx; focusLabel.z = c.mz;
+  const f = frameFor(c.mx + (isWide()?9:0), c.mz + (isWide()?9:-4), 26, 18, 60*rad); fly = f; setTargets();
 }
-document.getElementById("close").addEventListener("click", () => { card.classList.remove("open"); focus=null; setTargets(step); });
+function closeCard(){ card.classList.remove("open"); focus = null; focusLabel.el.textContent=""; setTargets(); }
+document.getElementById("close").addEventListener("click", () => { closeCard(); fly = shot("explore"); });
 addEventListener("keydown", e => { if (e.key==="Escape" && card.classList.contains("open")) document.getElementById("close").click(); });
-
 function drawChart(c){
   const svg = document.getElementById("c-chart"), w=368, h=120, pad=6;
-  const line = (arr, color, dash) => {
-    const vals = arr.map(v => v==null?null:v); const ok = vals.filter(v=>v!=null);
-    if (ok.length<2) return "";
-    const lo = Math.min(...ok), hi = Math.max(...ok), sp = hi-lo || 1;
-    let d=""; vals.forEach((v,k)=>{ if(v==null) return; const x=pad+k*(w-2*pad)/(NY-1), y=h-pad-(v-lo)/sp*(h-2*pad); d += (d?"L":"M")+x.toFixed(1)+" "+y.toFixed(1); });
-    return `<path d="${d}" fill="none" stroke="${color}" stroke-width="1.6" ${dash?'stroke-dasharray="3 4"':''} stroke-linecap="round" stroke-linejoin="round"/>`;
-  };
+  const line = (arr, color, dash) => { const ok = arr.filter(v=>v!=null); if (ok.length<2) return "";
+    const lo=Math.min(...ok), hi=Math.max(...ok), sp=hi-lo||1; let d="";
+    arr.forEach((v,k)=>{ if(v==null) return; const x=pad+k*(w-2*pad)/(NY-1), y=h-pad-(v-lo)/sp*(h-2*pad); d+=(d?"L":"M")+x.toFixed(1)+" "+y.toFixed(1); });
+    return `<path d="${d}" fill="none" stroke="${color}" stroke-width="1.6" ${dash?'stroke-dasharray="3 4"':''} stroke-linecap="round" stroke-linejoin="round"/>`; };
   svg.innerHTML = line(c.rel, c.cls===-1?"#e89a4e":c.cls===1?"#e6eef5":"#8d8a84") + line(c.pops, "#6f6c67", true);
-  svg.setAttribute("aria-label", "Сплошная линия: яркость относительно городов той же яркости. Пунктир: население.");
+  svg.setAttribute("aria-label", `${c.name}: яркость относительно похожих городов и население по годам`);
 }
-
-/* поиск */
 const q = document.getElementById("q"), results = document.getElementById("results");
 const byName = C.map((c,i)=>({i, key:c.name.toLowerCase()}));
 q.addEventListener("input", () => {
-  const s = q.value.trim().toLowerCase(); results.innerHTML = "";
-  if (!s) return;
-  const found = byName.filter(b => b.key.startsWith(s)).concat(byName.filter(b => !b.key.startsWith(s) && b.key.includes(s))).slice(0,8);
+  const s = q.value.trim().toLowerCase(); results.innerHTML = ""; if (!s) return;
+  const found = byName.filter(b=>b.key.startsWith(s)).concat(byName.filter(b=>!b.key.startsWith(s)&&b.key.includes(s))).slice(0,8);
   if (!found.length){ results.innerHTML = `<li class="empty">Такого города нет в выборке. Проверьте написание.</li>`; return; }
   found.forEach(b => { const c=C[b.i], li=document.createElement("li"), bt=document.createElement("button");
-    bt.innerHTML = `<span></span><small></small>`; bt.firstChild.textContent=c.name; bt.lastChild.textContent = c.pop?fmt.format(c.pop):"";
-    bt.addEventListener("click", ()=>{ openCity(b.i); }); li.appendChild(bt); results.appendChild(li); });
+    bt.innerHTML="<span></span><small></small>"; bt.firstChild.textContent=c.name; bt.lastChild.textContent=c.pop?fmt.format(c.pop):"";
+    bt.addEventListener("click", ()=>openCity(b.i)); li.appendChild(bt); results.appendChild(li); });
 });
-
-/* --- плавный пролёт камеры --- */
-let fly = null;
-function flyTo(pos, look){ fly = {pos, look}; if (step==="explore") controls.target.copy(look); }
+document.querySelectorAll(".filters .btn").forEach(b => b.addEventListener("click", () => {
+  filter = b.dataset.f; document.querySelectorAll(".filters .btn").forEach(x => x.setAttribute("aria-pressed", x===b)); setTargets();
+}));
 
 /* --- цикл --- */
-const clock = new THREE.Clock();
-const tmpC = new THREE.Color();
-setTargets("intro");
+const clock = new THREE.Clock(), v3 = new THREE.Vector3();
+setTargets();
+let t0 = 0;
 function frame(){
-  const dt = Math.min(clock.getDelta(), .05);
-  appear = Math.min(1, appear + dt/2.4);
-  // год в главе роста следует за прокруткой внутри длинной секции
-  if (step==="growth"){
-    const r = growthSec.getBoundingClientRect(); const prog = Math.min(1, Math.max(0, -r.top/(r.height-innerHeight)));
-    const y = Math.round(prog*(NY-1)); if (y!==year){ year=y; setTargets(step); }
-  }
+  const dt = Math.min(clock.getDelta(), .05); t0 += dt;
+  if (step==="growth"){ const r = story.getBoundingClientRect(); const pr = Math.min(1, Math.max(0, -r.top/(r.height-innerHeight))); const y = Math.round(pr*(NY-1)); if (y!==year){ year=y; setTargets(); } }
   yearEl.textContent = YEARS[Math.round(year)];
-  const k = reduce ? 1 : 1-Math.pow(.0016, dt);
-  const minX = -62, maxX = 70;
+  const k = reduce ? 1 : 1-Math.pow(.02, dt);
+  const appear = reduce ? 1 : Math.min(1, t0/2.2);
   for (let i=0;i<N;i++){
-    cur[i] += (tgt[i]-cur[i])*k;
-    curCol[i].lerp(tgtCol[i], k);
-    // волна появления с запада на восток
-    const wave = reduce ? 1 : Math.min(1, Math.max(0, appear*1.6 - (C[i].x-minX)/(maxX-minX)*.6));
-    const h = Math.max(.001, cur[i]*wave*wave*(3-2*wave));
-    M.compose(P.set(C[i].x,0,C[i].z), Q, S.set(W,h,W)); pillars.setMatrixAt(i,M);
-    pillars.setColorAt(i, curCol[i]);
-    tmpC.copy(curCol[i]).multiplyScalar(.3*wave); discs.setColorAt(i, tmpC);
+    const kk = reduce ? 1 : 1-Math.pow(.02, dt*speed[i]*1.2);
+    for (let a=0;a<3;a++){ const j=i*3+a; pos[j]+=(T.pos[j]-pos[j])*kk; col[j]+=(T.col[j]-col[j])*k; }
+    size[i]+=(T.size[i]-size[i])*k; alpha[i]+=(T.alpha[i]*appear-alpha[i])*k;
+    ghostAlpha[i] += ((step==="jump" && SW_A[i] ? .55 : 0) - ghostAlpha[i])*k;
   }
-  if (lightmat){ const want = (step==="intro"||step==="growth"||step==="step2021") ? 1 : .45; lightmat.opacity += (want*appear - lightmat.opacity)*k; }
-  pillars.instanceMatrix.needsUpdate = true; pillars.instanceColor.needsUpdate = true; discs.instanceColor.needsUpdate = true;
+  pgeo.attributes.position.needsUpdate = pgeo.attributes.color.needsUpdate = pgeo.attributes.size.needsUpdate = pgeo.attributes.alpha.needsUpdate = true;
+  ggeo.attributes.alpha.needsUpdate = true;
+  const mapLayer = (step==="jump"||step==="people") ? 0 : (step==="relative"||step==="explore"||step==="point" ? .55 : .85);
+  if (lightmat) lightmat.opacity += (mapLayer*appear - lightmat.opacity)*k;
+  cmat.opacity += ((mapLayer>0 ? .9 : 0) - cmat.opacity)*k;
+  for (const [name,g] of Object.entries(chartGroups)) g.userData.mat.opacity += (((g.userData.step||name)===step ? 1 : 0) - g.userData.mat.opacity)*k;
 
+  const target = fly || shot(step);
   if (step!=="explore" || fly){
-    const shot = fly || {pos:new THREE.Vector3(...SHOTS[step].pos), look:new THREE.Vector3(...SHOTS[step].look)};
-    camPos.lerp(shot.pos, reduce?1:1-Math.pow(.06,dt)); camLook.lerp(shot.look, reduce?1:1-Math.pow(.06,dt));
-    camera.position.copy(camPos); camera.lookAt(camLook);
-    if (fly && camPos.distanceTo(fly.pos)<.3){ controls.target.copy(fly.look); fly=null; }
+    const kc = reduce ? 1 : 1-Math.pow(.05, dt);
+    camPos.lerp(target.pos, kc); camLook.lerp(target.look, kc); camera.position.copy(camPos); camera.lookAt(camLook);
+    if (fly && camPos.distanceTo(fly.pos) < .5){ controls.target.copy(fly.look); fly = null; }
     if (step==="explore") controls.target.copy(camLook);
   } else { controls.update(); camPos.copy(camera.position); camLook.copy(controls.target); }
-  const pinIdx = step==="point" ? volzh : (step==="explore" && focus!==null ? focus : -1);
-  if (pinIdx>=0){
-    const c = C[pinIdx], v3 = new THREE.Vector3(c.x, cur[pinIdx]+.4, c.z).project(camera);
-    pin.textContent = c.name; pin.style.opacity = v3.z<1 ? 1 : 0;
-    pin.style.transform = `translate(${(v3.x*.5+.5)*innerWidth+10}px,${(-v3.y*.5+.5)*innerHeight-22}px)`;
-  } else pin.style.opacity = 0;
-  renderer.render(scene, camera);
-  requestAnimationFrame(frame);
+  camera.updateMatrixWorld();
+
+  const placed = [], leftEdge = isWide() && step!=="jump" && step!=="people" ? innerWidth*.44 : 0;
+  const order = LABELS.slice().sort((a,b)=>b.prio-a.prio);
+  for (const L of order){
+    const on = L.steps.has(step) && (L !== focusLabel || focus!==null);
+    if (!on){ L.el.style.opacity = 0; continue; }
+    v3.set(L.x, .05, L.z).project(camera);
+    if (v3.z > 1){ L.el.style.opacity = 0; continue; }
+    if (!L.w){ L.w = L.el.offsetWidth; L.h = L.el.offsetHeight; }
+    const px = (v3.x*.5+.5)*innerWidth, py = (-v3.y*.5+.5)*innerHeight;
+    const dx = L.align==="left" ? 10 : L.align==="right" ? -L.w - 6 : -L.w/2;
+    const r = {x:px+dx, y:py-8, w:L.w, h:L.h};
+    const isCity = L.el.classList.contains("city") || (L.el.classList.contains("big") && step!=="jump");
+    const clash = isCity && (r.x < leftEdge || placed.some(p => r.x < p.x+p.w+6 && p.x < r.x+r.w+6 && r.y < p.y+p.h && p.y < r.y+r.h));
+    if (clash){ L.el.style.opacity = 0; continue; }
+    if (isCity) placed.push(r);
+    L.el.style.transform = `translate(${r.x}px,${r.y}px)`; L.el.style.opacity = 1;
+  }
+  renderer.render(scene, camera); requestAnimationFrame(frame);
 }
 function resize(){
   renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.setSize(innerWidth, innerHeight, false);
   camera.aspect = innerWidth/innerHeight;
-  if (innerWidth >= 900) camera.setViewOffset(innerWidth*1.34, innerHeight, 0, 0, innerWidth, innerHeight); else camera.clearViewOffset();
-  camera.updateProjectionMatrix();
+  // точка интереса: справа от текста на широком экране, в верхней трети на узком
+  if (isWide()) camera.setViewOffset(innerWidth*1.34, innerHeight, 0, 0, innerWidth, innerHeight);
+  else camera.setViewOffset(innerWidth*1.4, innerHeight*1.4, innerWidth*.2, innerHeight*.4, innerWidth, innerHeight);
+  camera.updateProjectionMatrix(); pmat.uniforms.scale.value = innerHeight*renderer.getPixelRatio()*.55;
 }
 addEventListener("resize", resize);
-if (renderer){ resize(); document.getElementById("loading").classList.add("done"); requestAnimationFrame(frame); }
+if (renderer){ resize(); requestAnimationFrame(frame); }
 </script>
 </body>
 </html>
