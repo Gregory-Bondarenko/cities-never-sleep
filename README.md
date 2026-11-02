@@ -6,7 +6,7 @@
 
 Основа продукта: воспроизводимый исследовательский конвейер. Сайт на GitHub Pages служит витриной поверх готовых артефактов: <https://gregory-bondarenko.ru/cities-never-sleep/>.
 
-**Версия:** `0.5.0`. Статус вех и план: [docs/roadmap.md](docs/roadmap.md).
+**Версия:** `0.6.0.dev0`. Статус вех и план: [docs/roadmap.md](docs/roadmap.md).
 
 ## Как устроено
 
