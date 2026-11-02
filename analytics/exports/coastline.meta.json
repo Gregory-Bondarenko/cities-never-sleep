@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0.0",
+  "source": "Natural Earth 1:50m land (world-atlas@2)",
+  "built_at": "2026-11-02T19:14:38Z",
+  "package_version": "scripts/coastline.mjs",
+  "n_rows": 144,
+  "license_note": "Natural Earth: общественное достояние",
+  "n_points": 5197,
+  "bbox": {
+    "lat": [
+      40,
+      82.5
+    ],
+    "lon": "18…180, −180…−165"
+  },
+  "simplify_deg": 0.12
+}

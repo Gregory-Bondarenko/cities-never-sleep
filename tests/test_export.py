@@ -62,3 +62,6 @@ def test_build_web_export(tmp_path, monkeypatch):
     c = data["cities"][2]
     assert c["lat"] is None and c["population"] is None and c["lights_pct"] is None
     assert (tmp_path / "out" / "cities.meta.json").exists()
+    assert len(a["yoy"]) == 2 and abs(a["yoy"][0] - np.log(1.02)) < 1e-4
+    jump = data["story"]["jump"]["2020_2021"]
+    assert abs(jump["median_pct"] - 0.02) < 1e-3 and jump["share_up"] == 1.0

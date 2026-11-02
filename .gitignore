@@ -47,6 +47,7 @@ Thumbs.db
 *.swo
 
 # Node (web stub)
+node_modules/
 web/node_modules/
 web/dist/
 web/.vite/
