@@ -8,6 +8,8 @@
 
 ### Added
 
+- Выгрузка для витрины, схема 1.1.0: изменения год к году `yoy` по городам и блок `story.jump` с медианой и долей растущих городов; расчёты перенесены из витрины в аналитику (ADR-0001).
+- Береговая линия `analytics/exports/coastline.json` из Natural Earth 1:50m, скрипт `scripts/coastline.mjs`.
 - Ночной снимок для витрины: `cns export-lightmap --year` → `analytics/exports/lightmap_<год>.png` (максимум по блокам 10×10, логарифмическая шкала) и источник `lightmap` в `data-refresh`.
 
 ## [0.4.0] - 2026-10-30

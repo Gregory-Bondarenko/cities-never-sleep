@@ -103,9 +103,16 @@
 
 Один город на строку: координаты и население из справочника; `lights_rel_pct_per_year`, `lights_rel_p_value`, `brightness_decile`; `lights_class` (относительно индекса своей децили яркости, ADR-0008); `lights_nat_pct_per_year` и `lights_class_national` (относительно национального индекса, ADR-0007); `lights_raw_pct_per_year`; `lights_rel_pct_per_year_pre2022` и `lights_class_pre2022` (только 2012–2021); `lights_rel_pct_per_year_r2` (круг 2·r); `population_pct_per_year`, `population_p_value`, `population_class`; `quadrant`; флаги `any_flag_nan`, `any_flag_near_cap`, `flag_point_source` (максимальная яркость пикселя за последние 3 года более чем в 10 раз выше, чем за первые 3). Порог стабильности 1% в год, уровень значимости 0,05, минимум 8 лет для яркости и 5 лет для населения.
 
-### Выгрузка `analytics/exports/cities.json`, схема 1.0.0
+### Выгрузка `analytics/exports/cities.json`, схема 1.1.0
 
-Единственный источник данных витрины. Поля верхнего уровня: `years`, `national_index`, `cities`. Для города: `id`, `name`, `lat`, `lon`, `population`, `coverage`, `decile`, `lights_class`, `lights_pct`, `lights_class_national`, `population_class`, `population_pct`, `flags` (`point_source`, `near_cap`, `nan`) и `series` с рядами `lights_rel` (к индексу децили, среднее города = 1), `sol` и `population` по годам. Собирается командой `cns export-web`.
+Единственный источник данных витрины. Поля верхнего уровня: `years`, `national_index`, `cities`. Для города: `id`, `name`, `lat`, `lon`, `population`, `coverage`, `decile`, `lights_class`, `lights_pct`, `lights_class_national`, `population_class`, `population_pct`, `flags` (`point_source`, `near_cap`, `nan`) и `series` с рядами `lights_rel` (к индексу децили, среднее города = 1), `sol` и `population` по годам, `yoy` с логарифмом изменения суммы излучения для пар лет из `story.jump_pairs`. Блок `story.jump` хранит медианное изменение и долю растущих городов для каждой пары: витрина показывает эти числа, а не считает их. Собирается командой `cns export-web`.
+
+### Прочие выгрузки для витрины
+
+| Файл | Содержимое | Как собирается |
+|---|---|---|
+| `lightmap_<год>.png` | ночной снимок, максимум по блокам 10×10, логарифмическая шкала | `cns export-lightmap --year` на раннере (`data-refresh`, источник `lightmap`) |
+| `coastline.json` | береговые линии суши Natural Earth 1:50m в рамке России, без политических границ | `node scripts/coastline.mjs` |
 
 Радиус кругового контура вычисляется из `population_latest` функцией `process/boundaries.radius_km` (ADR-0005) и в справочнике не хранится.
 

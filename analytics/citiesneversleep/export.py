@@ -10,6 +10,7 @@ import json
 import math
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 from citiesneversleep.meta import build_meta, write_meta
@@ -22,13 +23,38 @@ from citiesneversleep.paths import (
     TRENDS_PROCESSED_DIR,
 )
 
-SCHEMA_VERSION = "1.0.0"
+SCHEMA_VERSION = "1.1.0"
+# Пары лет для главы о скачке 2021 года: обычный год и год скачка.
+JUMP_PAIRS = ((2019, 2020), (2020, 2021))
 
 
 def _num(x, digits: int = 4):
     if x is None or (isinstance(x, float) and math.isnan(x)) or pd.isna(x):
         return None
     return round(float(x), digits)
+
+
+def year_over_year(sol: pd.DataFrame, pairs=JUMP_PAIRS) -> pd.DataFrame:
+    """ln(sol_b / sol_a) по городам для пар лет; нули и пропуски дают NaN."""
+    out = {}
+    for a, b in pairs:
+        va, vb = sol[a], sol[b]
+        ok = (va > 0) & (vb > 0)
+        out[f"{a}_{b}"] = np.where(ok, np.log(vb.where(ok) / va.where(ok)), np.nan)
+    return pd.DataFrame(out, index=sol.index)
+
+
+def jump_summary(yoy: pd.DataFrame) -> dict:
+    """Медианное изменение и доля растущих городов для каждой пары лет."""
+    res = {}
+    for col in yoy.columns:
+        v = yoy[col].dropna()
+        res[col] = {
+            "median_pct": round(float(np.expm1(v.median())), 4),
+            "share_up": round(float((v > 0).mean()), 4),
+            "n": int(len(v)),
+        }
+    return res
 
 
 def build_web_export(dest_dir: Path | None = None) -> tuple[Path, dict]:
@@ -50,6 +76,7 @@ def build_web_export(dest_dir: Path | None = None) -> tuple[Path, dict]:
         .reindex(columns=years)
     )
     coverage = cities.set_index("city_id")["coverage"]
+    yoy = year_over_year(sol)
 
     out_cities = []
     for _, r in trends.sort_values("city_id").iterrows():
@@ -79,6 +106,7 @@ def build_web_export(dest_dir: Path | None = None) -> tuple[Path, dict]:
                     )
                     if bool(on)
                 ],
+                "yoy": [_num(v) for v in yoy.loc[cid]] if cid in yoy.index else None,
                 "series": {
                     "lights_rel": [_num(v, 3) for v in rel.loc[cid]] if cid in rel.index else None,
                     "sol": [_num(v, 1) for v in sol.loc[cid]] if cid in sol.index else None,
@@ -96,6 +124,7 @@ def build_web_export(dest_dir: Path | None = None) -> tuple[Path, dict]:
         "schema_version": SCHEMA_VERSION,
         "years": years,
         "national_index": trends_meta.get("national_index"),
+        "story": {"jump_pairs": [f"{a}_{b}" for a, b in JUMP_PAIRS], "jump": jump_summary(yoy)},
         "cities": out_cities,
     }
     dest_dir = dest_dir or EXPORTS_DIR
