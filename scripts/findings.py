@@ -44,6 +44,19 @@ def main() -> None:
     print("медиана тренда без поправки:", pct(t.lights_raw_pct_per_year.median()))
     print("доля положительных без поправки:", pct((t.lights_raw_pct_per_year > 0).mean()))
 
+    print("\n## Региональная составляющая (ADR-0010)")
+    rm = meta["regional_mode"]
+    print("доля дисперсии сглаженных полей:", rm["explained_share"])
+    print("сумма амплитуд:", rm["cumulative"])
+    print("амплитуды:", rm["amplitude_by_year"])
+    a, b = t.lights_rel_pct_per_year, t.lights_rel_pct_per_year_noadj
+    print(
+        f"Спирмен с поправкой/без: {a.rank().corr(b.rank()):.3f};",
+        "медиана |разницы| п.п. в год:", round(float((a - b).abs().median() * 100), 2),
+        "| совпадение классов:", pct((t.lights_class == t.lights_class_noadj).mean()),
+    )
+    print(pd.crosstab(t.lights_class_noadj, t.lights_class).to_string())
+
     print("\n## Свет и население")
     print(pd.crosstab(t.lights_class, t.population_class, margins=True).to_string())
     v = t.dropna(subset=["lights_rel_pct_per_year", "population_pct_per_year"])
