@@ -20,30 +20,74 @@ USER_AGENT = (
     "(https://github.com/Gregory-Bondarenko/cities-never-sleep; educational)"
 )
 
-# Отбор городов (ADR-0006). Две ветви:
-#   p17_russia: класс «город» (Q7930989), страна Россия (Q159), есть ОКТМО;
+# Классы, которыми в Wikidata размечены города России. Крупные города часто
+# отмечены не классом «город» (Q7930989), а «городом России», «большим городом»
+# или общим «городом» (#48: Екатеринбург, Владивосток, Иркутск, Кемерово).
+CITY_CLASSES = (
+    "Q7930989",  # город (city/town)
+    "Q515",  # город
+    "Q106389302",  # город России
+    "Q1549591",  # большой город
+    "Q1637706",  # город-миллионер
+    "Q5123997",  # город регионального значения в субъектах РФ
+)
+_CLASS_VALUES = " ".join(f"wd:{q}" for q in CITY_CLASSES)
+
+# Отбор городов (ADR-0006). Класс проверяется по всем утверждениям P31, кроме
+# устаревших, а не только по лучшему рангу (wdt:P31): у Краснодара класс «город»
+# имеет обычный ранг, а предпочтительный у «мегаполиса» (#48). Две ветви:
+#   p17_russia: один из CITY_CLASSES, страна Россия (Q159), есть ОКТМО;
 #   oktmo_only: класс «город» или его подкласс, есть ОКТМО, но в Wikidata не указана
 #                 страна Россия. Так в выборку попадают города Республики Крым,
 #                 Севастополя, ДНР, ЛНР, Запорожской и Херсонской областей, учтённые
 #                 в российском классификаторе ОКТМО.
-CITY_FILTER = """
+CITY_FILTER = (
+    """
   hint:Query hint:optimizer "None" .
   {
-    ?city wdt:P31 wd:Q7930989 ;
-          wdt:P17 wd:Q159 ;
+    VALUES ?cls { """
+    + _CLASS_VALUES
+    + """ }
+    ?st ps:P31 ?cls .
+    ?city p:P31 ?st .
+    FILTER NOT EXISTS { ?st wikibase:rank wikibase:DeprecatedRank . }
+    ?city wdt:P17 wd:Q159 ;
           wdt:P764 ?oktmo .
     BIND("p17_russia" AS ?coverage)
   } UNION {
     ?city wdt:P764 ?oktmo .
     FILTER NOT EXISTS { ?city wdt:P17 wd:Q159 . }
-    ?city wdt:P31/wdt:P279* wd:Q7930989 .
+    ?city p:P31/ps:P31/wdt:P279* wd:Q7930989 .
     BIND("oktmo_only" AS ?coverage)
   }
 """
+)
 # Порядок троек важен: оптимизатор отключён, поэтому во второй ветви движок
 # сначала берёт объекты с ОКТМО без страны Россия (их немного) и только для них
 # проверяет класс по цепочке подклассов. С оптимизатором запрос начинался
 # с обхода всех подклассов «города» и падал по таймауту Wikidata.
+
+# Контроль полноты: административные центры, которые обязаны попасть в выборку.
+# Пропуск любого из них означает ошибку отбора (#48).
+CONTROL_CITIES = {
+    "Q649": "Москва",
+    "Q656": "Санкт-Петербург",
+    "Q887": "Екатеринбург",
+    "Q3646": "Краснодар",
+    "Q959": "Владивосток",
+    "Q6576": "Иркутск",
+    "Q6066": "Кемерово",
+    "Q883": "Новосибирск",
+    "Q5196": "Грозный",
+    "Q7525": "Севастополь",
+}
+
+
+def missing_control_cities(city_ids) -> dict[str, str]:
+    """Контрольные города, которых нет среди ``city_ids``."""
+    have = set(city_ids)
+    return {q: n for q, n in CONTROL_CITIES.items() if q not in have}
+
 
 # Объекты с кодом ОКТМО, которые не являются территорией субъектов РФ (ADR-0006).
 EXCLUDED_CITIES = {
@@ -54,7 +98,7 @@ EXCLUDED_CITIES = {
 # и способом определения (P459), чтобы выбрать одно значение на город и год.
 POPULATION_QUERY = (
     """
-SELECT ?city ?cityLabel ?oktmo ?pop ?date ?rank ?method WHERE {"""
+SELECT DISTINCT ?city ?cityLabel ?oktmo ?pop ?date ?rank ?method WHERE {"""
     + CITY_FILTER
     + """  ?city p:P1082 ?popStmt .
   ?popStmt ps:P1082 ?pop ;
@@ -69,7 +113,7 @@ SELECT ?city ?cityLabel ?oktmo ?pop ?date ?rank ?method WHERE {"""
 # Справочник городов: координаты (P625).
 CITIES_QUERY = (
     """
-SELECT ?city ?cityLabel ?oktmo ?coverage ?coord WHERE {"""
+SELECT DISTINCT ?city ?cityLabel ?oktmo ?coverage ?coord WHERE {"""
     + CITY_FILTER
     + """  OPTIONAL { ?city wdt:P625 ?coord . }
   SERVICE wikibase:label { bd:serviceParam wikibase:language "ru,en". }

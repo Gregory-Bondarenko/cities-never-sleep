@@ -87,6 +87,7 @@ def fetch_pop(
     from citiesneversleep.sources.wikidata_pop import (
         fetch_and_save,
         fetch_sparql,
+        missing_control_cities,
         rows_to_dataframe,
     )
 
@@ -102,6 +103,10 @@ def fetch_pop(
         f"Население: {_pop_summary(population)}\n"
         f"Справочник городов: {len(cities)}, без координат {no_coords}"
     )
+    missing = missing_control_cities(cities["city_id"])
+    if missing:
+        console.print(f"[red]Нет контрольных городов[/red]: {', '.join(missing.values())}")
+        raise typer.Exit(1)
 
 
 @app.command("process-vnl")
