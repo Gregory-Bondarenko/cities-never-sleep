@@ -1,16 +1,42 @@
 {
-  "schema_version": "1.2.0",
+  "schema_version": "1.3.0",
   "source": [
     "lights/city_lights",
     "population/ru_cities_population",
     "cities/ru_cities"
   ],
-  "built_at": "2026-10-30T09:52:31Z",
-  "package_version": "0.4.0-dev",
+  "built_at": "2026-11-03T09:50:27Z",
+  "package_version": "0.6.0.dev0",
   "n_rows": 1068,
   "license_note": "VNL: CC-BY 4.0; Wikidata: CC0",
   "method": "наклон Сена по ln(ряда), тест Манна–Кендалла с поправкой на совпадения",
-  "lights_class_basis": "относительно индекса своей децили яркости (ADR-0008)",
+  "lights_class_basis": "относительно индекса своей децили яркости (ADR-0008) без региональной составляющей (ADR-0010)",
+  "regional_mode": {
+    "bandwidth_km": 400.0,
+    "explained_share": 0.668,
+    "n_cities": 1049,
+    "amplitude_by_year": {
+      "2013": -0.0487,
+      "2014": 0.0829,
+      "2015": 0.0048,
+      "2016": -0.0243,
+      "2017": 0.0199,
+      "2018": -0.0686,
+      "2019": 0.0553,
+      "2020": 0.0314,
+      "2021": -0.1671,
+      "2022": 0.1052,
+      "2023": 0.0163,
+      "2024": -0.0115
+    },
+    "cumulative": -0.0045
+  },
+  "lights_class_noadj_counts": {
+    "стабилен": 628,
+    "гаснет": 232,
+    "растёт": 207,
+    "мало данных": 1
+  },
   "national_index": {
     "2012": 1.0,
     "2013": 1.1229,
@@ -31,9 +57,9 @@
   "alpha": 0.05,
   "stable_band_pct_per_year": 1.0,
   "lights_class_counts": {
-    "стабилен": 628,
-    "гаснет": 232,
-    "растёт": 207,
+    "стабилен": 579,
+    "гаснет": 264,
+    "растёт": 224,
     "мало данных": 1
   },
   "lights_class_national_counts": {

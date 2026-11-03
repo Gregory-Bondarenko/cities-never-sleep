@@ -11,6 +11,10 @@
 яркости, в том числе ступенька 2021 года в наборе VNL (ADR-0007, ADR-0008).
 Класс «растёт» означает рост быстрее городов сопоставимой яркости.
 Класс относительно национального индекса сохраняется для сравнения.
+
+Из относительного ряда дополнительно вычитается повторяющаяся региональная
+составляющая межгодовых колебаний (ADR-0010, модуль ``regional``), если
+переданы координаты городов.
 """
 
 from __future__ import annotations
@@ -29,12 +33,13 @@ MIN_YEARS_POPULATION = 5
 ALPHA = 0.05
 STABLE_BAND = 0.01  # |изменение| < 1% в год считается стабильностью
 SEAM_LAST_YEAR = 2021  # последний год до смены шкалы VNL (#10)
-SCHEMA_VERSION = "1.2.0"
+SCHEMA_VERSION = "1.3.0"
 # Точечный источник: медиана максимальной яркости за последние 3 года выше
 # медианы за первые 3 года более чем в 10 раз (новый промышленный объект, факел).
 POINT_SOURCE_RATIO = 10.0
 N_STRATA = 10  # децили медианной яркости (ADR-0008)
 MIN_CITIES_PER_STRATUM = 30  # при меньшей выборке страт становится меньше
+MIN_CITIES_REGIONAL = 100  # меньше городов с координатами: поправка ADR-0010 не применяется
 
 
 @dataclass(frozen=True)
@@ -144,11 +149,39 @@ def relative_series(lights: pd.DataFrame, column: str, strata: pd.Series | None)
     return lights[column] / np.asarray(factor, dtype="float64")
 
 
-def city_trends(lights: pd.DataFrame, population: pd.DataFrame) -> pd.DataFrame:
+def point_source_ids(lights: pd.DataFrame) -> pd.Index:
+    """Города с флагом точечного источника."""
+    flags = lights.groupby("city_id").apply(point_source_growth, include_groups=False)
+    return flags[flags].index
+
+
+def adjusted_relative(
+    lights: pd.DataFrame, strata: pd.Series, coords: pd.DataFrame | None, column: str = "sol"
+):
+    """Относительный ряд к децили и тот же ряд без региональной составляющей.
+
+    Возвращает (относительный, скорректированный, компонента или None).
+    Без координат скорректированный ряд совпадает с относительным.
+    """
+    from citiesneversleep.metrics.regional import regional_adjustment
+
+    rel = relative_series(lights, column, strata)
+    if coords is None or coords.dropna().shape[0] < MIN_CITIES_REGIONAL:
+        return rel, rel, None
+    factor, mode = regional_adjustment(
+        lights.assign(_rel=rel), "_rel", coords, exclude=point_source_ids(lights)
+    )
+    return rel, rel * factor.to_numpy(float), mode
+
+
+def city_trends(
+    lights: pd.DataFrame, population: pd.DataFrame, coords: pd.DataFrame | None = None
+) -> pd.DataFrame:
     """Тренды по каждому городу.
 
     ``lights``: набор city_lights; ``population``: основные значения населения
-    (``is_primary``) за те же годы.
+    (``is_primary``) за те же годы; ``coords``: индекс city_id, столбцы
+    ``lat``, ``lon`` для поправки на региональную составляющую (ADR-0010).
     """
     years = sorted(lights["year"].unique())
     y0, y1 = years[0], years[-1]
@@ -158,9 +191,12 @@ def city_trends(lights: pd.DataFrame, population: pd.DataFrame) -> pd.DataFrame:
     pop_by_city = dict(tuple(pop.groupby("city_id")))
 
     strata = brightness_strata(lights)
+    sol_rel, sol_adj, _ = adjusted_relative(lights, strata, coords)
+    _, sol_r2_adj, _ = adjusted_relative(lights, strata, coords, "sol_r2")
     lights = lights.assign(
-        sol_rel=relative_series(lights, "sol", strata),
-        sol_r2_rel=relative_series(lights, "sol_r2", strata),
+        sol_rel=sol_rel,
+        sol_adj=sol_adj,
+        sol_r2_rel=sol_r2_adj,
         sol_nat=relative_series(lights, "sol", None),
     )
 
@@ -169,9 +205,10 @@ def city_trends(lights: pd.DataFrame, population: pd.DataFrame) -> pd.DataFrame:
         g = g.sort_values("year")
         t_raw = log_trend(g["year"], g["sol"])
         t_nat = log_trend(g["year"], g["sol_nat"])
-        t_all = log_trend(g["year"], g["sol_rel"])
+        t_all = log_trend(g["year"], g["sol_adj"])
+        t_noadj = log_trend(g["year"], g["sol_rel"])
         pre = g[g["year"] <= SEAM_LAST_YEAR]
-        t_pre = log_trend(pre["year"], pre["sol_rel"])
+        t_pre = log_trend(pre["year"], pre["sol_adj"])
         t_r2 = log_trend(g["year"], g["sol_r2_rel"])
         p = pop_by_city.get(city_id)
         t_pop = (
@@ -187,6 +224,8 @@ def city_trends(lights: pd.DataFrame, population: pd.DataFrame) -> pd.DataFrame:
                 "lights_rel_p_value": t_all.p_value,
                 "lights_class": classify(t_all),
                 "brightness_decile": int(strata.get(city_id, 0)),
+                "lights_rel_pct_per_year_noadj": t_noadj.pct_per_year,
+                "lights_class_noadj": classify(t_noadj),
                 "lights_nat_pct_per_year": t_nat.pct_per_year,
                 "lights_class_national": classify(t_nat),
                 "lights_raw_pct_per_year": t_raw.pct_per_year,
@@ -228,6 +267,7 @@ def quadrant(lights_class: str, population_class: str) -> str:
 def build_city_trends(dest_dir=None):
     """Собрать ``trends/city_trends`` из city_lights, населения и справочника городов."""
     from citiesneversleep.meta import build_meta, write_meta
+    from citiesneversleep.metrics.regional import BANDWIDTH_KM
     from citiesneversleep.paths import (
         CITIES_PROCESSED_DIR,
         LIGHTS_PROCESSED_DIR,
@@ -238,7 +278,10 @@ def build_city_trends(dest_dir=None):
     lights = pd.read_parquet(LIGHTS_PROCESSED_DIR / "city_lights.parquet")
     population = pd.read_parquet(POP_PROCESSED_DIR / "ru_cities_population.parquet")
     cities = pd.read_parquet(CITIES_PROCESSED_DIR / "ru_cities.parquet")
-    trends = city_trends(lights, population)
+    coords = cities.set_index("city_id")[["lat", "lon"]]
+    trends = city_trends(lights, population, coords)
+    strata = brightness_strata(lights)
+    _, _, mode = adjusted_relative(lights, strata, coords)
     trends = cities[["city_id", "name", "lat", "lon", "population_latest"]].merge(
         trends, on="city_id", how="right"
     )
@@ -254,7 +297,20 @@ def build_city_trends(dest_dir=None):
         n_rows=len(trends),
         license_note="VNL: CC-BY 4.0; Wikidata: CC0",
         method="наклон Сена по ln(ряда), тест Манна–Кендалла с поправкой на совпадения",
-        lights_class_basis="относительно индекса своей децили яркости (ADR-0008)",
+        lights_class_basis=(
+            "относительно индекса своей децили яркости (ADR-0008) "
+            "без региональной составляющей (ADR-0010)"
+        ),
+        regional_mode={
+            "bandwidth_km": BANDWIDTH_KM,
+            "explained_share": round(mode.explained, 3),
+            "n_cities": mode.n_cities,
+            "amplitude_by_year": {
+                y: round(float(a), 4) for y, a in zip(mode.years, mode.amplitude, strict=True)
+            },
+            "cumulative": round(mode.cumulative, 4),
+        },
+        lights_class_noadj_counts=trends["lights_class_noadj"].value_counts().to_dict(),
         national_index={
             int(k): round(float(v), 4) for k, v in np.exp(national_index(lights)).items()
         },

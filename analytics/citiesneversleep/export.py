@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 
 from citiesneversleep.meta import build_meta, write_meta
-from citiesneversleep.metrics.trends import brightness_strata, relative_series
+from citiesneversleep.metrics.trends import adjusted_relative, brightness_strata
 from citiesneversleep.paths import (
     CITIES_PROCESSED_DIR,
     EXPORTS_DIR,
@@ -23,7 +23,7 @@ from citiesneversleep.paths import (
     TRENDS_PROCESSED_DIR,
 )
 
-SCHEMA_VERSION = "1.1.0"
+SCHEMA_VERSION = "1.1.1"
 # Пары лет для главы о скачке 2021 года: обычный год и год скачка.
 JUMP_PAIRS = ((2019, 2020), (2020, 2021))
 
@@ -65,7 +65,9 @@ def build_web_export(dest_dir: Path | None = None) -> tuple[Path, dict]:
 
     years = sorted(int(y) for y in lights["year"].unique())
     strata = brightness_strata(lights)
-    lights = lights.assign(sol_rel=relative_series(lights, "sol", strata))
+    coords = trends.set_index("city_id")[["lat", "lon"]]
+    _, sol_adj, _ = adjusted_relative(lights, strata, coords)
+    lights = lights.assign(sol_rel=sol_adj)
     # относительный ряд нормируется на среднее города, чтобы линии были сопоставимы
     lights["rel_norm"] = lights["sol_rel"] / lights.groupby("city_id")["sol_rel"].transform("mean")
     rel = lights.pivot(index="city_id", columns="year", values="rel_norm").reindex(columns=years)
@@ -139,7 +141,10 @@ def build_web_export(dest_dir: Path | None = None) -> tuple[Path, dict]:
             n_rows=len(out_cities),
             license_note="VNL: CC-BY 4.0; Wikidata: CC0",
             size_bytes=out.stat().st_size,
-            lights_rel_note="сумма излучения к индексу децили яркости, среднее города = 1",
+            lights_rel_note=(
+                "сумма излучения к индексу децили яркости без региональной "
+                "составляющей (ADR-0010), среднее города = 1"
+            ),
         ),
     )
     return out, payload
