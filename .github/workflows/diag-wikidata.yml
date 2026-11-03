@@ -8,26 +8,26 @@ jobs:
   probe:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.3.3
-      - run: uv python install 3.12 && uv sync --all-extras --frozen
-      - name: Fetch with new filter
+      - name: Classes of added items
         run: |
-          set -o pipefail
-          old=$(git show HEAD:data/processed/cities/ru_cities.csv | wc -l)
-          start=$(date +%s)
-          uv run cns fetch-pop 2>&1 | tee f.log || { echo "::error title=fetch::$(tail -c 1500 f.log | tr '\n' ' ')"; exit 1; }
-          new=$(wc -l < data/processed/cities/ru_cities.csv)
-          uv run python - <<'P'
-          import pandas as pd
-          c = pd.read_csv("data/processed/cities/ru_cities.csv", dtype={"oktmo": str})
-          o = pd.read_csv("old.csv", dtype={"oktmo": str}) if False else None
-          big = c.sort_values("population_latest", ascending=False).head(40)
-          print("::notice title=top40::" + ", ".join(big["name"]))
-          print("::notice title=coverage::" + str(c["coverage"].value_counts().to_dict()) + " nocoord=" + str(int(c["lat"].isna().sum())))
+          cat > q.rq <<'Q'
+          SELECT ?c ?name ?p31 ?p31Label ?rank ?end ?start WHERE {
+            VALUES ?name { "Бугры"@ru "Колтуши"@ru "Кокшайск"@ru "Сукромны"@ru "Свияжск"@ru "Старая Ладога"@ru "Старочеркасская"@ru "Наурская"@ru "Шелковская"@ru "Серноводское"@ru "Ойсхара"@ru "Углеуральский"@ru "Краснобродский"@ru "Ожерелье"@ru "Железнодорожный"@ru "Абакан"@ru "Нея"@ru "Колпино"@ru "Щёлкино"@ru "Тольятти"@ru }
+            ?c rdfs:label ?name ; wdt:P17 wd:Q159 ; wdt:P764 [] ; p:P31 ?s .
+            ?s ps:P31 ?p31 ; wikibase:rank ?rank .
+            OPTIONAL { ?s pq:P582 ?end } OPTIONAL { ?s pq:P580 ?start }
+            SERVICE wikibase:label { bd:serviceParam wikibase:language "ru,en". }
+          }
+          Q
+          curl -sS -G https://query.wikidata.org/sparql -H 'Accept: text/csv' -H 'User-Agent: CitiesNeverSleep-diag (https://github.com/Gregory-Bondarenko/cities-never-sleep)' --data-urlencode query@q.rq > out.csv
+          python3 - <<'P'
+          import csv, collections
+          by = collections.defaultdict(list)
+          for r in csv.DictReader(open("out.csv")):
+              e = (" до "+r["end"][:4]) if r["end"] else ""; s = (" с "+r["start"][:4]) if r["start"] else ""
+              by[r["name"]].append(f'{r["p31"].rsplit("/",1)[-1]} {r["p31Label"]} [{r["rank"].rsplit("#",1)[-1][:4]}{s}{e}]')
+          lines = [f"{n}: " + "; ".join(sorted(set(v))) for n, v in sorted(by.items())]
+          chunk = []
+          for i in range(0, len(lines), 2):
+              print("::notice title=p31 " + str(i) + "::" + " || ".join(lines[i:i+2])[:1000])
           P
-          echo "::notice title=counts::old=$old new=$new secs=$(( $(date +%s)-start ))"
-          git diff --stat | tail -1 | sed 's/^/::notice title=diff::/'
-          comm -13 <(git show HEAD:data/processed/cities/ru_cities.csv | cut -d, -f2 | sort) <(cut -d, -f2 data/processed/cities/ru_cities.csv | sort) | head -150 | tr '\n' ',' | sed 's/^/::notice title=added::/'
-          echo
-          comm -23 <(git show HEAD:data/processed/cities/ru_cities.csv | cut -d, -f2 | sort) <(cut -d, -f2 data/processed/cities/ru_cities.csv | sort) | tr '\n' ',' | sed 's/^/::notice title=removed::/'
