@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Города не спят</title>
-<meta name="description" content="Ночная яркость 1 068 городов России с 2012 по 2024 год по снимкам спутника VIIRS.">
+<meta name="description" content="Какие города России за двенадцать лет стали светлее ночью, а какие погасли: 1 118 городов по снимкам спутника VIIRS, 2012–2024.">
 <meta property="og:title" content="Города не спят">
-<meta property="og:description" content="Ночная яркость 1 068 городов России с 2012 по 2024 год по снимкам спутника VIIRS.">
+<meta property="og:description" content="Какие города России за двенадцать лет стали светлее ночью, а какие погасли: 1 118 городов по снимкам спутника VIIRS, 2012–2024.">
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#000000">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000'/%3E%3Ccircle cx='12' cy='14' r='3' fill='%23e6eef5'/%3E%3Ccircle cx='21' cy='19' r='2' fill='%23e89a4e'/%3E%3C/svg%3E">
@@ -32,6 +32,7 @@ p+p{margin-top:14px}
 .lead{margin-top:28px;max-width:26em}
 .num{font-variant-numeric:tabular-nums;color:var(--led);font-weight:400}
 .sodium{color:var(--sodium)}
+.led{color:var(--led)}
 .actions{display:flex;gap:12px;margin-top:40px;flex-wrap:wrap}
 .btn{appearance:none;border:1px solid rgba(230,238,245,.28);background:transparent;color:var(--led);font:inherit;font-size:15px;padding:13px 22px;border-radius:999px;cursor:pointer;text-decoration:none;transition:border-color .3s var(--ease),background .3s var(--ease)}
 .btn:hover{border-color:var(--led);background:rgba(230,238,245,.06)}
@@ -94,6 +95,8 @@ footer a{color:var(--bone)}
   .legend{gap:12px;font-size:12px;left:20px;right:auto}
   .year{font-size:64px;bottom:auto;top:56px}
   .lbl.quad{display:none}
+  .lbl.axis{font-size:10px}
+  .lbl.title{font-size:12px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -118,48 +121,64 @@ footer a{color:var(--bone)}
   <section class="ch" data-step="intro">
     <div class="copy">
       <h1>Города<br>не спят</h1>
-      <p class="lead">Ночная яркость 1 068 городов России с 2012 по 2024 год по снимкам спутника VIIRS.</p>
+      <p class="lead">Какие города России за двенадцать лет стали светлее ночью, а какие погасли. <span id="n-cities">1 118</span> городов по снимкам спутника VIIRS, 2012–2024.</p>
       <div class="actions">
         <a class="btn solid" href="#story">Смотреть</a>
-        <a class="btn" href="#explore">Найти город</a>
+        <a class="btn" href="#explore" id="to-search">Найти свой город</a>
       </div>
     </div>
   </section>
 
-  <section class="ch tall" id="story" data-step="growth">
+  <section class="ch tall" id="story" data-step="change">
     <div class="copy">
-      <h2>Страна светлеет на <span class="num">37%</span></h2>
-      <p>Каждая точка это город, размер показывает его ночную яркость. Если смотреть на данные без поправок, за двенадцать лет растёт почти каждый: положительный тренд у <span class="num">82%</span> городов.</p>
+      <h2>Двенадцать лет за одну прокрутку</h2>
+      <p>Каждая точка это город. Цвет показывает, как менялась его ночная яркость по сравнению с городами той же яркости: <span class="led">белые</span> светлеют быстрее, <span class="sodium">оранжевые</span> гаснут.</p>
+      <p><span class="led num">231</span> город светлеет, <span class="sodium num">280</span> темнеют, <span class="num">606</span> держатся на уровне.</p>
     </div>
   </section>
 
-  <section class="ch" data-step="jump">
+  <section class="ch" data-step="rising">
     <div class="copy">
-      <h2>Только рост случился за один год</h2>
-      <p>Сравним, как менялась яркость городов от года к году. С 2019 на 2020 год медианный город потускнел на <span class="num">2%</span>. С 2020 на 2021 год вырос на <span class="num">30%</span>, и так сделали <span class="num">90%</span> городов сразу.</p>
-      <p>Так синхронно города не меняются. Вероятно, изменилась обработка снимков.</p>
+      <h2>Светлеют столицы республик</h2>
+      <p>Из <span class="num">22</span> столиц республик <span class="led num">12</span> светлеют быстрее городов той же яркости, и только одна темнеет. Среди центров остальных регионов светлеют <span class="num">11</span> из <span class="num">63</span>, а темнеют <span class="sodium num">17</span>.</p>
+      <p>Если не считать городов, где рост даёт один новый объект, быстрее всех светлеют <span id="l-rising" class="led">Грозный и Симферополь</span>. Это может свидетельствовать о вложениях в городскую среду республиканских столиц; установить причину по снимкам нельзя.</p>
     </div>
   </section>
 
-  <section class="ch" data-step="relative">
+  <section class="ch" data-step="fading">
     <div class="copy">
-      <h2>Сравним каждый город с похожими</h2>
-      <p>Уберём сдвиг, общий для городов той же яркости, и посмотрим, кто меняется быстрее остальных. <span class="led num">224</span> города светлеют, <span class="sodium num">264</span> темнеют, <span class="num">579</span> держатся на уровне.</p>
+      <h2>Гаснут вместе с жителями</h2>
+      <p>В <span class="sodium num">86</span> городах темнеет и одновременно сокращается население. Среди них много промышленных: <span id="l-fading" class="sodium">Новотроицк, Анжеро-Судженск</span>.</p>
     </div>
   </section>
 
   <section class="ch" data-step="people">
     <div class="copy">
       <h2>Свет не следует за людьми</h2>
-      <p>По горизонтали изменение населения, по вертикали изменение яркости, оба в процентах в год. Если бы свет следовал за людьми, облако вытянулось бы по диагонали. Оно круглое: ранговая корреляция <span class="num">0,11</span>.</p>
-      <p>Из <span class="num">288</span> городов, где население сокращается, <span class="num">158</span> светят как прежде.</p>
+      <p>По горизонтали изменение населения, по вертикали изменение яркости. Если бы свет следовал за людьми, облако вытянулось бы по диагонали. Оно круглое: ранговая корреляция <span class="num">0,11</span>.</p>
+      <p>В <span class="led num">52</span> городах свет растёт, хотя жителей становится меньше, например <span id="l-paradox" class="led">Брянск, Мурманск</span>. Обратных случаев всего <span class="num">11</span>.</p>
     </div>
   </section>
 
-  <section class="ch" data-step="point">
+  <section class="ch" data-step="millions">
     <div class="copy">
-      <h2>Иногда весь рост даёт один объект</h2>
-      <p>У <span class="num">18</span> городов самый яркий пиксель вырос больше чем в 10 раз. В Волжском он вырос со <span class="num">153</span> до <span class="num">10 643</span> единиц: это новый промышленный источник, а не новые улицы.</p>
+      <h2>Миллионники расходятся</h2>
+      <p id="l-mil">У крупнейших городов динамика разная, Москва и Санкт-Петербург держатся на уровне городов своей яркости.</p>
+    </div>
+  </section>
+
+  <section class="ch" data-step="regions">
+    <div class="copy">
+      <h2>Регионы</h2>
+      <p>Города собраны по субъектам, цвет показывает медианную динамику. Светлее всего становятся <span id="l-reg-up" class="led">Крым</span>, быстрее всего темнеют <span id="l-reg-down" class="sodium">Смоленская область</span>.</p>
+    </div>
+  </section>
+
+  <section class="ch" data-step="jump">
+    <div class="copy">
+      <h2>Почему города сравниваются с похожими</h2>
+      <p>Сами снимки меняются от года к году. С 2019 на 2020 год медианный город потускнел на <span class="num">2%</span>, а с 2020 на 2021 вырос на <span class="num">30%</span>, и так сделали <span class="num">90%</span> городов сразу. Так синхронно города не меняются: вероятно, изменилась обработка снимков.</p>
+      <p>Поэтому каждый город сравнивается с городами той же яркости, а общий для региона сдвиг вычитается. Темнеть не обязательно значит пустеть: спутник почти не видит синюю часть света белых светодиодов, и переход на них может выглядеть как угасание.</p>
     </div>
   </section>
 
@@ -218,7 +237,11 @@ const C = D.cities.filter(c => c.lat!=null).map(c => ({
   id:c.id, name:c.name, lat:c.lat, lon:c.lon, pop:c.population||0,
   cls:CLASS[c.lights_class], pct:c.lights_pct, pcls:CLASS[c.population_class], ppct:c.population_pct,
   point:c.flags.includes("point_source")?1:0, sol:c.series.sol, rel:c.series.lights_rel, pops:c.series.population, yoy:c.yoy||[null,null],
+  region:c.region, pctile:c.pctile, change:c.series.change||[],
 }));
+const IDX = new Map(C.map((c,i)=>[c.id,i]));
+const HL = Object.fromEntries(Object.entries(STORY.highlights||{}).map(([k,ids]) => [k, ids.map(id=>IDX.get(id)).filter(i=>i!=null)]));
+const HLSET = Object.fromEntries(Object.entries(HL).map(([k,v]) => [k, new Set(v)]));
 const N = C.length;
 
 /* --- проекция: коническая Ламберта, x на восток, y на север --- */
@@ -295,12 +318,33 @@ function label(text, x, z, steps, cls="axis", align="center", prio=0){
 /* ======== раскладки ======== */
 const H = v => v>0 ? Math.log10(1+v) : 0;
 const sizeOf = v => .9 + H(v)*1.05;     // размер точки от яркости
+const pctTxt = v => (v>0?"+":"−")+Math.abs(Math.round(v*100))+"%";
+const pct1 = v => (v>0?"+":v<0?"−":"")+Math.abs(v*100).toFixed(1).replace(".",",")+"%";
 
-/* 1. Карта */
+/* цвет накопленного изменения: оранжевый ← графит → белый */
+const tmpC = new THREE.Color();
+function changeColor(v){
+  if (v==null || isNaN(v)) return COL.ghost;
+  const t = Math.max(-1, Math.min(1, v/.45));
+  return t>=0 ? tmpC.copy(COL.graphite).lerp(COL.led, Math.pow(t,.8)) : tmpC.copy(COL.graphite).lerp(COL.sodium, Math.pow(-t,.8));
+}
+
+/* 1. Карта: крупные города подписаны */
 const BIG = C.map((c,i)=>i).filter(i=>C[i].pop>=600000).sort((a,b)=>C[b].pop-C[a].pop);
-BIG.forEach(i => label(C[i].name, C[i].mx, C[i].mz, ["intro","relative","explore"], "city", "left", C[i].pop));
+BIG.forEach(i => label(C[i].name, C[i].mx, C[i].mz, ["intro","change","explore"], "city", "left", C[i].pop));
 
-/* 2. Скачок: две строки «пчелиного роя» изменений год к году */
+/* 2. Подборки на карте: подпись с темпом в год */
+function hlLabels(key, stepName, cls){
+  (HL[key]||[]).forEach((i,k) => label(`${C[i].name} ${pct1(C[i].pct)}`, C[i].mx, C[i].mz, [stepName], cls, "left", 1e8-k));
+}
+const CAPS = STORY.capitals||{republics:{ids:[]},other:{ids:[]}};
+const CAPR = (CAPS.republics.ids||[]).map(id=>IDX.get(id)).filter(i=>i!=null), CAPO = (CAPS.other.ids||[]).map(id=>IDX.get(id)).filter(i=>i!=null);
+const CAPRSET = new Set(CAPR), CAPOSET = new Set(CAPO);
+CAPR.filter(i=>!C[i].point).forEach((i,k) => label(`${C[i].name} ${pct1(C[i].pct)}`, C[i].mx, C[i].mz, ["rising"], k<6?"big":"city", "left", 1e8-k));
+hlLabels("fading_with_people", "fading", "big");
+const bbox = ids => ids.reduce((b,i)=>({x0:Math.min(b.x0,C[i].mx),x1:Math.max(b.x1,C[i].mx),z0:Math.min(b.z0,C[i].mz),z1:Math.max(b.z1,C[i].mz)}),{x0:1e9,x1:-1e9,z0:1e9,z1:-1e9});
+
+/* 3. Скачок: две строки «пчелиного роя» изменений год к году */
 const JW = 52, JX0 = CH.x - JW/2, jx = v => JX0 + (Math.max(-.6, Math.min(.9, v)) + .6)/1.5*JW;
 const ROW = {a: CH.z - 11, b: CH.z + 11}, DOT = .5;
 function swarm(values, rowZ){
@@ -312,7 +356,6 @@ function swarm(values, rowZ){
 }
 const [PA, PB] = STORY.jump_pairs, JA = STORY.jump[PA], JB = STORY.jump[PB];
 const SW_A = swarm(C.map(c=>c.yoy[0]), ROW.a), SW_B = swarm(C.map(c=>c.yoy[1]), ROW.b);
-const pctTxt = v => (v>0?"+":"−")+Math.abs(Math.round(v*100))+"%";
 const pairTxt = p => p.replace("_"," → ");
 lines("jump", [[[jx(0),ROW.a-10.5],[jx(0),ROW.b+10.5]], [[JX0,ROW.a+10.6],[JX0+JW,ROW.a+10.6]], [[JX0,ROW.b+10.6],[JX0+JW,ROW.b+10.6]]]);
 lines("jumpMed", [[[jx(Math.log1p(JA.median_pct)),ROW.a-10.2],[jx(Math.log1p(JA.median_pct)),ROW.a+10.6]], [[jx(Math.log1p(JB.median_pct)),ROW.b-10.2],[jx(Math.log1p(JB.median_pct)),ROW.b+10.6]]], 0xc9c4ba);
@@ -321,7 +364,7 @@ chartGroups.jumpMed.userData.step = "jump";
 label(`${pairTxt(PA)}: медиана ${pctTxt(JA.median_pct)}`, JX0, ROW.a-10.4, ["jump"], "title", "left");
 label(`${pairTxt(PB)}: медиана ${pctTxt(JB.median_pct)}`, JX0, ROW.b-10.4, ["jump"], "big", "left");
 
-/* 3. Свет и население: диаграмма рассеяния */
+/* 4. Свет и население: диаграмма рассеяния */
 const SW = 46, SHh = 34;
 const sx = v => CH.x + Math.max(-1, Math.min(1, v/0.03))*SW/2;
 const sz = v => CH.z - Math.max(-1, Math.min(1, v/0.12))*SHh/2;
@@ -334,10 +377,26 @@ label("людей меньше, света больше", CH.x-SW/2+1, CH.z-SHh/
 label("людей больше, света больше", CH.x+SW/2-1, CH.z-SHh/2+3, ["people"], "quad", "right");
 label("людей меньше, света меньше", CH.x-SW/2+1, CH.z+SHh/2-3, ["people"], "quad", "left");
 label("людей больше, света меньше", CH.x+SW/2-1, CH.z+SHh/2-3, ["people"], "quad", "right");
-const NOPOP_Z = CH.z + SHh/2 + 6;   // города без ряда населения уходят под график и гаснут
+(HL.brighter_while_shrinking||[]).slice(0,5).forEach((i,k) => { const c=C[i]; if (c.ppct!=null) label(c.name, sx(c.ppct), sz(c.pct), ["people"], "city", "left", 1e7-k); });
 
-/* 4. Точечные источники: подписи на карте */
-C.forEach((c,i) => { if (c.point) label(c.name, c.mx, c.mz, ["point"], c.name==="Волжский"?"big":"city", "left", c.name==="Волжский"?1e9:c.pop); });
+/* 5. Миллионники: строки по убыванию темпа */
+const MIL = HL.millions||[], MROW = 2.3, MW = 40;
+const MX0 = CH.x - MW/2 + 6, mx = v => MX0 + (Math.max(-.04, Math.min(.06, v)) + .04)/.1*MW;
+const mz = k => CH.z - (MIL.length-1)*MROW/2 + k*MROW;
+const MILPOS = new Map(MIL.map((i,k)=>[i,[mx(C[i].pct||0), mz(k)]]));
+lines("millions", [[[mx(0), mz(0)-1.6],[mx(0), mz(MIL.length-1)+1.6]]]);
+MIL.forEach((i,k) => { label(C[i].name, MX0-2, mz(k), ["millions"], "axis", "right"); label(pct1(C[i].pct||0), mx(C[i].pct||0)+1.2, mz(k), ["millions"], "axis", "left"); });
+label("свет к похожим, в год", MX0-2, mz(0)-3.4, ["millions"], "title", "left");
+
+/* 6. Регионы: города собираются в облако у центра своего субъекта */
+const REG = new Map((STORY.regions||[]).map(r=>[r.region, r]));
+const regCenter = new Map();
+C.forEach(c => { if (!c.region) return; const r = regCenter.get(c.region)||{x:0,z:0,n:0,ids:[]}; r.x+=c.mx; r.z+=c.mz; r.n++; r.ids.push(c); regCenter.set(c.region,r); });
+const REGPOS = new Array(N).fill(null);
+regCenter.forEach((r,name) => { r.x/=r.n; r.z/=r.n; r.ids.sort((a,b)=>b.pop-a.pop).forEach((c,k) => { const ang = k*2.39996, rr = .62*Math.sqrt(k); REGPOS[IDX.get(c.id)] = [r.x+rr*Math.cos(ang), r.z+rr*Math.sin(ang)]; }); });
+const REGS = (STORY.regions||[]);
+REGS.slice(0,4).concat(REGS.slice(-4)).forEach((r,k) => { const c = regCenter.get(r.region); if (c) label(`${r.region} ${pct1(r.median_pct)}`, c.x, c.z, ["regions"], k<4?"big":"city", "left", 1e8-k); });
+function regionColor(c){ const r = REG.get(c.region); if (!r) return COL.ghost; return changeColor(r.median_pct/.04*.45); }
 
 /* ======== состояния ======== */
 let step = "intro", year = 0, filter = "all", focus = null;
@@ -345,18 +404,29 @@ function setTargets(){
   const yi = Math.round(year);
   C.forEach((c,i) => {
     let x = c.mx, z = c.mz, s = sizeOf(c.sol[NY-1]), a = .9, color = COL.bone;
-    if (step==="intro"){ s = sizeOf(c.sol[NY-1]); a=.85; }
-    else if (step==="growth"){ s = sizeOf(c.sol[yi]); a=.9; }
+    if (step==="intro"){ a=.85; }
+    else if (step==="change"){ color = changeColor(c.change[yi]); a = c.change[yi]==null ? .15 : .95; }
+    else if (step==="rising"){
+      if (CAPRSET.has(i)){ color = classColor(c); a = 1; s = Math.max(s,2.2)*1.35; }
+      else if (CAPOSET.has(i)){ color = classColor(c); a = .7; s = Math.max(s,1.6); }
+      else { color = COL.ghost; a = .45; s *= .7; } }
+    else if (step==="fading"){
+      const on = HLSET.fading_with_people && HLSET.fading_with_people.has(i);
+      if (on){ color = COL.sodium; a = 1; s *= 1.6; }
+      else if (c.cls===-1 && c.pcls===-1){ color = COL.sodium; a = .8; }
+      else if (c.cls===-1){ color = COL.sodium; a = .3; }
+      else { color = COL.ghost; a = .5; s *= .8; } }
     else if (step==="jump"){
-      // нижняя строка: сами города; верхняя строка рисуется облаком копий (ghost) ниже
-      const B = SW_B[i]; if (B){ x=B[0]; z=B[1]; } s = 1.15; a = B?.95:0; color = COL.bone; }
-    else if (step==="relative"||step==="explore"){ color = classColor(c); s = sizeOf(c.sol[NY-1]); a = .92;
-      if (step==="explore" && filter!=="all" && String(c.cls)!==filter){ a=.08; }
-      if (step==="explore" && focus!==null && i!==focus) a = Math.min(a,.35); }
+      const B = SW_B[i]; if (B){ x=B[0]; z=B[1]; } s = 1.15; a = B?.95:0; }
+    else if (step==="explore"){ color = classColor(c); a = .92;
+      if (filter!=="all" && String(c.cls)!==filter){ a=.08; }
+      if (focus!==null && i!==focus) a = Math.min(a,.35); }
     else if (step==="people"){ color = classColor(c); s = 1.25;
-      if (c.ppct==null || c.pct==null){ x = c.mx; z = c.mz; a = 0; }
-      else { x = sx(c.ppct); z = sz(c.pct); a = c.pcls===-1 ? .95 : .55; } }
-    else if (step==="point"){ color = c.point ? COL.led : COL.ghost; a = c.point ? 1 : .55; s = c.point ? sizeOf(c.sol[NY-1])*1.25 : sizeOf(c.sol[NY-1])*.8; }
+      if (c.ppct==null || c.pct==null){ a = 0; }
+      else { x = sx(c.ppct); z = sz(c.pct); const q = (c.cls===1&&c.pcls===-1) || (c.cls===-1&&c.pcls===-1); a = q ? 1 : .32; if (q) s = 1.6; } }
+    else if (step==="millions"){ const P = MILPOS.get(i);
+      if (P){ x=P[0]; z=P[1]; s=2.6; a=1; color = changeColor((c.pct||0)/.04*.45); } else { color = COL.ghost; a = 0; } }
+    else if (step==="regions"){ const P = REGPOS[i]; if (P){ x=P[0]; z=P[1]; } s = 1.7; color = regionColor(c); a = P && REG.has(c.region) ? .95 : .12; }
     T.pos[i*3]=x; T.pos[i*3+1]=0.05; T.pos[i*3+2]=z;
     T.col[i*3]=color.r; T.col[i*3+1]=color.g; T.col[i*3+2]=color.b; T.size[i]=s; T.alpha[i]=a;
   });
@@ -379,15 +449,20 @@ function frameFor(cx, cz, halfW, halfH, elev){
   return {pos:new THREE.Vector3(cx, d*Math.sin(elev), cz + d*Math.cos(elev)), look};
 }
 const MAPW = (mapBox.x1-mapBox.x0)/2, MAPH = (mapBox.z1-mapBox.z0)/2;
-const V = C[C.findIndex(c=>c.name==="Волжский")];
+function frameBox(ids, elev, pad=6){
+  if (!ids || !ids.length) return frameFor(MC.x, MC.z, MAPW, MAPH, elev);
+  const b = bbox(ids); return frameFor((b.x0+b.x1)/2, (b.z0+b.z1)/2, Math.max(14,(b.x1-b.x0)/2+pad), Math.max(10,(b.z1-b.z0)/2+pad), elev);
+}
 function shot(s){
   switch(s){
     case "intro":   return frameFor(MC.x, MC.z, MAPW, MAPH, 62*rad);
-    case "growth":  return frameFor(MC.x-14, MC.z+4, MAPW*.55, MAPH*.6, 50*rad);
+    case "change":  return frameFor(MC.x-6, MC.z+4, MAPW*.6, MAPH*.62, 52*rad);
+    case "rising":  return frameBox(CAPR, 60*rad, 4);
+    case "fading":  return frameBox(HL.fading_with_people, 58*rad);
     case "jump":    return frameFor(CH.x, CH.z, JW/2+3, 24, 84*rad);
-    case "relative":return frameFor(MC.x, MC.z, MAPW, MAPH, 66*rad);
     case "people":  return frameFor(CH.x - (isWide()?5:0), CH.z, SW/2+5, SHh/2+5, 86*rad);
-    case "point":   return frameFor(MC.x-6, MC.z, MAPW*.8, MAPH*.8, 70*rad);
+    case "millions":return isWide() ? frameFor(CH.x, CH.z, MW/2+10, MIL.length*MROW/2+4, 86*rad) : frameFor(CH.x-7, CH.z, MW/2+17, MIL.length*MROW/2+4, 86*rad);
+    case "regions": return frameFor(MC.x, MC.z, MAPW, MAPH, 70*rad);
     default:        return frameFor(MC.x, MC.z, MAPW, MAPH, 64*rad);
   }
 }
@@ -403,9 +478,9 @@ const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting
 document.querySelectorAll("[data-step]").forEach(s => io.observe(s));
 function enter(s){
   if (s===step) return; step = s;
-  if (s!=="growth") year = NY-1;
-  yearEl.classList.toggle("hide", s!=="growth");
-  legend.classList.toggle("hide", !(s==="relative"||s==="explore"||s==="people"));
+  if (s!=="change") year = NY-1;
+  yearEl.classList.toggle("hide", s!=="change");
+  legend.classList.toggle("hide", !(s==="change"||s==="explore"||s==="people"||s==="regions"||s==="rising"));
   controls.enabled = s==="explore"; canvas.style.pointerEvents = s==="explore" ? "auto" : "none";
   if (s!=="explore"){ fly = null; closeCard(); }
   else if (focus===null) { const f = shot("explore"); fly = f; }
@@ -431,14 +506,16 @@ let focusLabel = label("", 0, 0, ["explore"], "big", "left", 2e9);
 function openCity(i){
   focus = i; const c = C[i];
   document.getElementById("c-name").textContent = c.name;
-  document.getElementById("c-meta").textContent = c.pop ? `${fmt.format(c.pop)} жителей` : "население неизвестно";
+  document.getElementById("c-meta").textContent = [c.region, c.pop ? `${fmt.format(c.pop)} жителей` : "население неизвестно"].filter(Boolean).join(" · ");
   document.getElementById("c-verdict").textContent = `Яркость ${CLS[c.cls]}${c.pct!=null?": "+pctf(c.pct)+" в год":""}. Население ${PCLS[c.pcls]}${c.ppct!=null?", "+pctf(c.ppct)+" в год":""}.`;
-  document.getElementById("c-note").textContent = c.point ? "Внутри контура появился очень яркий объект: максимум яркости пикселя вырос больше чем в 10 раз." : "";
+  const rank = c.pctile==null ? "" : c.pctile>=.5 ? `Светлеет быстрее ${Math.round(c.pctile*100)}% городов той же яркости.` : `Темнеет быстрее ${Math.round((1-c.pctile)*100)}% городов той же яркости.`;
+  document.getElementById("c-note").textContent = [rank, c.point ? "Внутри контура появился очень яркий объект: максимум яркости пикселя вырос больше чем в 10 раз." : ""].filter(Boolean).join(" ");
+  try { history.replaceState(null, "", "#"+c.id); } catch(e){}
   drawChart(c); card.classList.add("open");
   focusLabel.el.textContent = c.name; focusLabel.x = c.mx; focusLabel.z = c.mz;
   const f = frameFor(c.mx + (isWide()?9:0), c.mz + (isWide()?9:-4), 26, 18, 60*rad); fly = f; setTargets();
 }
-function closeCard(){ card.classList.remove("open"); focus = null; focusLabel.el.textContent=""; setTargets(); }
+function closeCard(){ card.classList.remove("open"); focus = null; focusLabel.el.textContent=""; setTargets(); if (location.hash.startsWith("#Q")) try { history.replaceState(null, "", location.pathname); } catch(e){} }
 document.getElementById("close").addEventListener("click", () => { closeCard(); fly = shot("explore"); });
 addEventListener("keydown", e => { if (e.key==="Escape" && card.classList.contains("open")) document.getElementById("close").click(); });
 function drawChart(c){
@@ -464,13 +541,35 @@ document.querySelectorAll(".filters .btn").forEach(b => b.addEventListener("clic
   filter = b.dataset.f; document.querySelectorAll(".filters .btn").forEach(x => x.setAttribute("aria-pressed", x===b)); setTargets();
 }));
 
+/* --- тексты из данных: имена в подборках берутся из выгрузки --- */
+const names = (ids, n) => (ids||[]).slice(0,n).map(i=>C[i].name);
+const listTxt = arr => arr.length<2 ? (arr[0]||"") : arr.slice(0,-1).join(", ")+" и "+arr[arr.length-1];
+const setTxt = (id, t) => { const el = document.getElementById(id); if (el && t) el.textContent = t; };
+setTxt("n-cities", fmt.format(D.cities.length));
+setTxt("l-rising", listTxt(CAPR.filter(i=>!C[i].point).slice(0,4).map(i=>`${C[i].name} (${pct1(C[i].pct)} в год)`)));
+setTxt("l-fading", listTxt(names(HL.fading_with_people, 4)));
+setTxt("l-paradox", listTxt(names(HL.brighter_while_shrinking, 3)));
+{ const up = names(MIL.filter(i=>C[i].cls===1), 3), down = names(MIL.filter(i=>C[i].cls===-1).reverse(), 3);
+  const verb = (arr, one, many) => arr.length>1 ? many : one;
+  const el = document.getElementById("l-mil");
+  if (el && (up.length || down.length)) el.innerHTML = "Среди городов-миллионников " +
+    (up.length ? `<span class="led">${listTxt(up)}</span> ${verb(up,"светлеет","светлеют")} быстрее похожих` : "") + (up.length&&down.length ? ", " : "") +
+    (down.length ? `<span class="sodium">${listTxt(down)}</span> ${verb(down,"темнеет","темнеют")}` : "") +
+    ". Остальные, включая Москву и Санкт-Петербург, держатся на уровне городов своей яркости."; }
+setTxt("l-reg-up", listTxt(REGS.slice(0,3).map(r=>r.region)));
+setTxt("l-reg-down", listTxt(REGS.slice(-3).reverse().map(r=>r.region)));
+document.getElementById("to-search").addEventListener("click", () => setTimeout(() => q.focus({preventScroll:true}), 700));
+/* ссылка на город: #Q… открывает его карточку */
+const hashId = location.hash.slice(1);
+if (IDX.has(hashId)){ document.getElementById("explore").scrollIntoView(); setTimeout(() => { enter("explore"); openCity(IDX.get(hashId)); }, 300); }
+
 /* --- цикл --- */
 const clock = new THREE.Clock(), v3 = new THREE.Vector3();
 setTargets();
 let t0 = 0;
 function frame(){
   const dt = Math.min(clock.getDelta(), .05); t0 += dt;
-  if (step==="growth"){ const r = story.getBoundingClientRect(); const pr = Math.min(1, Math.max(0, -r.top/(r.height-innerHeight))); const y = Math.round(pr*(NY-1)); if (y!==year){ year=y; setTargets(); } }
+  if (step==="change"){ const r = story.getBoundingClientRect(); const pr = Math.min(1, Math.max(0, -r.top/(r.height-innerHeight))); const y = Math.round(pr*(NY-1)); if (y!==year){ year=y; setTargets(); } }
   yearEl.textContent = YEARS[Math.round(year)];
   const k = reduce ? 1 : 1-Math.pow(.02, dt);
   const appear = reduce ? 1 : Math.min(1, t0/2.2);
@@ -482,7 +581,7 @@ function frame(){
   }
   pgeo.attributes.position.needsUpdate = pgeo.attributes.color.needsUpdate = pgeo.attributes.size.needsUpdate = pgeo.attributes.alpha.needsUpdate = true;
   ggeo.attributes.alpha.needsUpdate = true;
-  const mapLayer = (step==="jump"||step==="people") ? 0 : (step==="relative"||step==="explore"||step==="point" ? .55 : .85);
+  const mapLayer = (step==="jump"||step==="people"||step==="millions") ? 0 : (step==="intro" ? .85 : step==="regions" ? .25 : .5);
   if (lightmat) lightmat.opacity += (mapLayer*appear - lightmat.opacity)*k;
   cmat.opacity += ((mapLayer>0 ? .9 : 0) - cmat.opacity)*k;
   for (const [name,g] of Object.entries(chartGroups)) g.userData.mat.opacity += (((g.userData.step||name)===step ? 1 : 0) - g.userData.mat.opacity)*k;
@@ -496,7 +595,7 @@ function frame(){
   } else { controls.update(); camPos.copy(camera.position); camLook.copy(controls.target); }
   camera.updateMatrixWorld();
 
-  const placed = [], leftEdge = isWide() && step!=="jump" && step!=="people" ? innerWidth*.44 : 0;
+  const placed = [], leftEdge = isWide() && !["jump","people","millions"].includes(step) ? innerWidth*.44 : 0;
   const order = LABELS.slice().sort((a,b)=>b.prio-a.prio);
   for (const L of order){
     const on = L.steps.has(step) && (L !== focusLabel || focus!==null);

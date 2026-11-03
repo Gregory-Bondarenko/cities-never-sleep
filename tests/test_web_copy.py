@@ -35,35 +35,63 @@ def pct(x: float) -> str:
 @pytest.fixture(scope="module")
 def facts() -> dict:
     trends = pd.read_parquet(PROCESSED / "trends" / "city_trends.parquet")
-    lights = pd.read_parquet(PROCESSED / "lights" / "city_lights.parquet")
     cities = json.loads((EXPORTS / "cities.json").read_text(encoding="utf-8"))
-    meta = json.loads((PROCESSED / "trends" / "city_trends.meta.json").read_text(encoding="utf-8"))
     jump = cities["story"]["jump"]
     cls = trends["lights_class"].value_counts()
-    shrinking = trends[trends["population_class"] == "гаснет"]
     v = trends.dropna(subset=["lights_rel_pct_per_year", "population_pct_per_year"])
     rho = (
         v[["lights_rel_pct_per_year", "population_pct_per_year"]].corr(method="spearman").iloc[0, 1]
     )
-    names = pd.read_parquet(PROCESSED / "cities" / "ru_cities.parquet")[["city_id", "name"]]
-    volzh = lights.merge(names, on="city_id").query("name == 'Волжский'").sort_values("year")
-    index = meta["national_index"]
+    q = cities["story"]["quadrants"]
+    caps = cities["story"]["capitals"]
     return {
-        "рост индекса": pct(index[max(index)] - 1),
-        "доля растущих без поправки": pct((trends["lights_raw_pct_per_year"] > 0).mean()),
         "медиана 2019-2020": pct(jump["2019_2020"]["median_pct"]),
         "медиана 2020-2021": pct(jump["2020_2021"]["median_pct"]),
         "доля растущих 2021": pct(jump["2020_2021"]["share_up"]),
+        "городов в выборке": f"{len(cities['cities']):,}".replace(",", " "),
         "светлеют": str(cls["растёт"]),
         "темнеют": str(cls["гаснет"]),
         "на уровне": str(cls["стабилен"]),
-        "население сокращается": str(len(shrinking)),
-        "из них стабильны": str(int((shrinking["lights_class"] == "стабилен").sum())),
         "корреляция": f"{rho:.2f}".replace(".", ","),
-        "точечные источники": str(int(trends["flag_point_source"].sum())),
-        "Волжский было": f"{volzh['max_radiance'].iloc[0]:,.0f}".replace(",", " "),
-        "Волжский стало": f"{volzh['max_radiance'].iloc[-1]:,.0f}".replace(",", " "),
+        "гаснут вместе с жителями": str(q["lights_down_people_down"]),
+        "светлеют при оттоке": str(q["lights_up_people_down"]),
+        "обратные случаи": str(q["lights_down_people_up"]),
+        "столиц республик": str(caps["republics"]["n"]),
+        "из них светлеют": str(caps["republics"]["up"]),
+        "центров остальных": str(caps["other"]["n"]),
+        "из них светлеют ": str(caps["other"]["up"]),
+        "из них темнеют": str(caps["other"]["down"]),
     }
+
+
+CAUCASUS = {
+    "Чечня",
+    "Дагестан",
+    "Ингушетия",
+    "Ставропольский край",
+    "Кабардино-Балкария",
+    "Карачаево-Черкесия",
+    "Северная Осетия",
+    "Адыгея",
+}
+
+
+def test_claims_in_headings_match_data():
+    """Утверждения в заголовках, которые не подставляются из данных."""
+    data = json.loads((EXPORTS / "cities.json").read_text(encoding="utf-8"))
+    by_id = {c["id"]: c for c in data["cities"]}
+    text = page_text()
+    if "и только одна темнеет" in text:
+        assert data["story"]["capitals"]["republics"]["down"] == 1
+    if "Крым и Кавказ" in text or "Крым, Кавказ" in text:
+        regions = [by_id[i]["region"] for i in data["story"]["highlights"]["rising"]]
+        assert sum(r in ("Республика Крым", "Севастополь") for r in regions) >= 2
+        assert sum(r in CAUCASUS for r in regions) >= 2
+    html = PAGE.read_text(encoding="utf-8")
+    if "включая Москву и Санкт-Петербург" in html:
+        for name in ("Москва", "Санкт-Петербург"):
+            city = next(c for c in data["cities"] if c["name"] == name)
+            assert city["lights_class"] == "стабилен", name
 
 
 def test_numbers_on_page_match_data(facts):

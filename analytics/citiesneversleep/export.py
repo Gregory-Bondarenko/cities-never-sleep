@@ -22,8 +22,17 @@ from citiesneversleep.paths import (
     POP_PROCESSED_DIR,
     TRENDS_PROCESSED_DIR,
 )
+from citiesneversleep.reference.regions import region_of
+from citiesneversleep.story import (
+    capitals_summary,
+    cumulative_change,
+    decile_percentile,
+    highlights,
+    quadrant_counts,
+    region_summary,
+)
 
-SCHEMA_VERSION = "1.1.1"
+SCHEMA_VERSION = "1.2.0"
 # Пары лет для главы о скачке 2021 года: обычный год и год скачка.
 JUMP_PAIRS = ((2019, 2020), (2020, 2021))
 
@@ -71,6 +80,15 @@ def build_web_export(dest_dir: Path | None = None) -> tuple[Path, dict]:
     # относительный ряд нормируется на среднее города, чтобы линии были сопоставимы
     lights["rel_norm"] = lights["sol_rel"] / lights.groupby("city_id")["sol_rel"].transform("mean")
     rel = lights.pivot(index="city_id", columns="year", values="rel_norm").reindex(columns=years)
+    change = cumulative_change(
+        lights.pivot(index="city_id", columns="year", values="sol_rel").reindex(columns=years)
+    )
+    trends = trends.assign(
+        region=trends["city_id"]
+        .map(cities.set_index("city_id").get("oktmo", pd.Series(dtype="string")))
+        .map(region_of)
+    )
+    pctile = decile_percentile(trends)
     sol = lights.pivot(index="city_id", columns="year", values="sol").reindex(columns=years)
     pop = (
         population[population["is_primary"] & population["year"].between(years[0], years[-1])]
@@ -93,12 +111,14 @@ def build_web_export(dest_dir: Path | None = None) -> tuple[Path, dict]:
                 if pd.isna(r["population_latest"])
                 else int(r["population_latest"]),
                 "coverage": coverage.get(cid),
+                "region": r["region"],
                 "decile": int(r["brightness_decile"]),
                 "lights_class": r["lights_class"],
                 "lights_pct": _num(r["lights_rel_pct_per_year"]),
                 "lights_class_national": r["lights_class_national"],
                 "population_class": r["population_class"],
                 "population_pct": _num(r["population_pct_per_year"]),
+                "pctile": _num(pctile.get(cid), 3),
                 "flags": [
                     name
                     for name, on in (
@@ -111,6 +131,9 @@ def build_web_export(dest_dir: Path | None = None) -> tuple[Path, dict]:
                 "yoy": [_num(v) for v in yoy.loc[cid]] if cid in yoy.index else None,
                 "series": {
                     "lights_rel": [_num(v, 3) for v in rel.loc[cid]] if cid in rel.index else None,
+                    "change": [_num(v, 3) for v in change.loc[cid]]
+                    if cid in change.index
+                    else None,
                     "sol": [_num(v, 1) for v in sol.loc[cid]] if cid in sol.index else None,
                     "population": [None if pd.isna(v) else int(v) for v in pop.loc[cid]]
                     if cid in pop.index
@@ -126,7 +149,14 @@ def build_web_export(dest_dir: Path | None = None) -> tuple[Path, dict]:
         "schema_version": SCHEMA_VERSION,
         "years": years,
         "national_index": trends_meta.get("national_index"),
-        "story": {"jump_pairs": [f"{a}_{b}" for a, b in JUMP_PAIRS], "jump": jump_summary(yoy)},
+        "story": {
+            "jump_pairs": [f"{a}_{b}" for a, b in JUMP_PAIRS],
+            "jump": jump_summary(yoy),
+            "highlights": highlights(trends),
+            "capitals": capitals_summary(trends),
+            "quadrants": quadrant_counts(trends),
+            "regions": region_summary(trends),
+        },
         "cities": out_cities,
     }
     dest_dir = dest_dir or EXPORTS_DIR
