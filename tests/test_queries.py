@@ -27,3 +27,13 @@ def test_missing_control_cities():
 
     assert missing_control_cities(CONTROL_CITIES) == {}
     assert missing_control_cities(["Q649"])["Q887"] == "Екатеринбург"
+
+
+def test_rural_filters():
+    from citiesneversleep.sources.wikidata_pop import CITY_FILTER, is_rural_oktmo
+
+    assert "pq:P582" in CITY_FILTER and "wd:Q532" in CITY_FILTER
+    assert is_rural_oktmo("96634420101")  # сельское поселение в районе
+    assert not is_rural_oktmo("22605101001")  # городское поселение
+    assert not is_rural_oktmo("03701000001")  # городской округ
+    assert not is_rural_oktmo(None) and not is_rural_oktmo("4570")

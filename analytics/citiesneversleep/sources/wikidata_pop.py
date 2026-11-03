@@ -32,10 +32,24 @@ CITY_CLASSES = (
     "Q5123997",  # город регионального значения в субъектах РФ
 )
 _CLASS_VALUES = " ".join(f"wd:{q}" for q in CITY_CLASSES)
+# Сельские классы: если такой класс стоит с предпочтительным рангом, а класс
+# города только с обычным, объект считается сельским (Серноводское, Нея).
+RURAL_CLASSES = (
+    "Q532",  # село
+    "Q5084",  # деревня
+    "Q2514025",  # посёлок
+    "Q2023000",  # хутор
+    "Q748331",  # станица
+    "Q15078955",  # посёлок городского типа России
+    "Q20019082",  # рабочий посёлок
+)
+_RURAL_VALUES = " ".join(f"wd:{q}" for q in RURAL_CLASSES)
 
 # Отбор городов (ADR-0006). Класс проверяется по всем утверждениям P31, кроме
 # устаревших, а не только по лучшему рангу (wdt:P31): у Краснодара класс «город»
-# имеет обычный ранг, а предпочтительный у «мегаполиса» (#48). Две ветви:
+# имеет обычный ранг, а предпочтительный у «мегаполиса» (#48). Утверждения
+# с датой окончания (P582) не учитываются: Свияжск был городом до 1932 года.
+# Две ветви:
 #   p17_russia: один из CITY_CLASSES, страна Россия (Q159), есть ОКТМО;
 #   oktmo_only: класс «город» или его подкласс, есть ОКТМО, но в Wikidata не указана
 #                 страна Россия. Так в выборку попадают города Республики Крым,
@@ -51,6 +65,15 @@ CITY_FILTER = (
     ?st ps:P31 ?cls .
     ?city p:P31 ?st .
     FILTER NOT EXISTS { ?st wikibase:rank wikibase:DeprecatedRank . }
+    FILTER NOT EXISTS { ?st pq:P582 ?ended . }
+    FILTER NOT EXISTS {
+      ?st wikibase:rank wikibase:NormalRank .
+      ?city p:P31 ?rst .
+      ?rst wikibase:rank wikibase:PreferredRank ; ps:P31 ?rural .
+      VALUES ?rural { """
+    + _RURAL_VALUES
+    + """ }
+    }
     ?city wdt:P17 wd:Q159 ;
           wdt:P764 ?oktmo .
     BIND("p17_russia" AS ?coverage)
@@ -81,6 +104,17 @@ CONTROL_CITIES = {
     "Q5196": "Грозный",
     "Q7525": "Севастополь",
 }
+
+
+def is_rural_oktmo(code) -> bool:
+    """Код ОКТМО сельского поселения в составе муниципального района.
+
+    Третий знак 6 означает муниципальный район, шестой знак 4 сельское
+    поселение. У всех городов выборки в районах шестой знак 1 (городское
+    поселение); в муниципальных округах тип поселения по коду не различим.
+    """
+    s = "" if code is None or pd.isna(code) else str(code)
+    return len(s) == 11 and s.isdigit() and s[2] == "6" and s[5] == "4"
 
 
 def missing_control_cities(city_ids) -> dict[str, str]:
@@ -258,6 +292,7 @@ def rows_to_dataframe(rows: list[dict]) -> pd.DataFrame:
     df["method"] = _strip(df["method"], ENTITY_PREFIX)
     df = df[~df["city_id"].isin(EXCLUDED_CITIES)]
     df = add_oktmo_status(df)
+    df = df[~df["oktmo"].map(is_rural_oktmo).astype(bool)]
     df["population"] = pd.to_numeric(df["population"], errors="coerce")
     df["date"] = pd.to_datetime(df["date"], errors="coerce", utc=True)
     df["year"] = df["date"].dt.year.astype("Int64")
@@ -285,6 +320,7 @@ def cities_from_rows(rows: list[dict], population: pd.DataFrame) -> pd.DataFrame
     df["city_id"] = _strip(df["city_id"], ENTITY_PREFIX)
     df = df[~df["city_id"].isin(EXCLUDED_CITIES)]
     df = add_oktmo_status(df)
+    df = df[~df["oktmo"].map(is_rural_oktmo).astype(bool)]
     coords = df["coord"].astype("string").str.extract(_POINT)
     df["lat"] = pd.to_numeric(coords["lat"], errors="coerce")
     df["lon"] = pd.to_numeric(coords["lon"], errors="coerce")
