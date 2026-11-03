@@ -1,20 +1,20 @@
 {
   "schema_version": "1.1.0",
   "source": "Wikidata SPARQL",
-  "built_at": "2026-10-30T09:19:58Z",
-  "package_version": "0.2.0-dev",
-  "n_rows": 1068,
+  "built_at": "2026-11-03T10:11:34Z",
+  "package_version": "0.6.0.dev0",
+  "n_rows": 1118,
   "license_note": "Wikidata: CC0",
   "endpoint": "https://query.wikidata.org/sparql",
-  "fetched_at": "2026-10-30T09:19:11Z",
+  "fetched_at": "2026-11-03T10:09:22Z",
   "n_without_coords": 0,
   "n_without_population": 0,
   "coverage_counts": {
-    "p17_russia": 1061,
+    "p17_russia": 1111,
     "oktmo_only": 7
   },
   "excluded": {
     "Q165413": "Байконур: территория Республики Казахстан, арендованная Российской Федерацией"
   },
-  "query": "SELECT ?city ?cityLabel ?oktmo ?coverage ?coord WHERE {\n  hint:Query hint:optimizer \"None\" .\n  {\n    ?city wdt:P31 wd:Q7930989 ;\n          wdt:P17 wd:Q159 ;\n          wdt:P764 ?oktmo .\n    BIND(\"p17_russia\" AS ?coverage)\n  } UNION {\n    ?city wdt:P764 ?oktmo .\n    FILTER NOT EXISTS { ?city wdt:P17 wd:Q159 . }\n    ?city wdt:P31/wdt:P279* wd:Q7930989 .\n    BIND(\"oktmo_only\" AS ?coverage)\n  }\n  OPTIONAL { ?city wdt:P625 ?coord . }\n  SERVICE wikibase:label { bd:serviceParam wikibase:language \"ru,en\". }\n}"
+  "query": "SELECT DISTINCT ?city ?cityLabel ?oktmo ?coverage ?coord WHERE {\n  hint:Query hint:optimizer \"None\" .\n  {\n    VALUES ?cls { wd:Q7930989 wd:Q515 wd:Q106389302 wd:Q1549591 wd:Q1637706 wd:Q5123997 }\n    ?st ps:P31 ?cls .\n    ?city p:P31 ?st .\n    FILTER NOT EXISTS { ?st wikibase:rank wikibase:DeprecatedRank . }\n    FILTER NOT EXISTS { ?st pq:P582 ?ended . }\n    FILTER NOT EXISTS {\n      ?st wikibase:rank wikibase:NormalRank .\n      ?city p:P31 ?rst .\n      ?rst wikibase:rank wikibase:PreferredRank ; ps:P31 ?rural .\n      VALUES ?rural { wd:Q532 wd:Q5084 wd:Q2514025 wd:Q2023000 wd:Q748331 wd:Q15078955 wd:Q20019082 }\n    }\n    ?city wdt:P17 wd:Q159 ;\n          wdt:P764 ?oktmo .\n    BIND(\"p17_russia\" AS ?coverage)\n  } UNION {\n    ?city wdt:P764 ?oktmo .\n    FILTER NOT EXISTS { ?city wdt:P17 wd:Q159 . }\n    ?city p:P31/ps:P31/wdt:P279* wd:Q7930989 .\n    BIND(\"oktmo_only\" AS ?coverage)\n  }\n  OPTIONAL { ?city wdt:P625 ?coord . }\n  SERVICE wikibase:label { bd:serviceParam wikibase:language \"ru,en\". }\n}"
 }
