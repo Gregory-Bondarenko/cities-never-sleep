@@ -1,23 +1,23 @@
 {
   "schema_version": "1.1.0",
   "source": "Wikidata SPARQL",
-  "built_at": "2026-10-30T09:19:58Z",
-  "package_version": "0.2.0-dev",
-  "n_rows": 36712,
+  "built_at": "2026-11-03T10:11:34Z",
+  "package_version": "0.6.0.dev0",
+  "n_rows": 37933,
   "license_note": "Wikidata: CC0; значения населения происходят из бюллетеней Росстата",
   "endpoint": "https://query.wikidata.org/sparql",
-  "fetched_at": "2026-10-30T09:19:11Z",
-  "n_cities": 1068,
+  "fetched_at": "2026-11-03T10:09:22Z",
+  "n_cities": 1118,
   "year_min": 1350,
   "year_max": 2025,
-  "n_years": 322,
-  "n_primary": 36297,
-  "n_conflict_city_years": 39,
+  "n_years": 325,
+  "n_primary": 37872,
+  "n_conflict_city_years": 43,
   "selection_rule": "preferred > normal; перепись > оценка; поздняя дата; большее значение",
   "oktmo_status_by_city": {
     "invalid": 1,
-    "ok": 1064,
-    "short": 3
+    "ok": 1106,
+    "short": 11
   },
-  "query": "SELECT ?city ?cityLabel ?oktmo ?pop ?date ?rank ?method WHERE {\n  hint:Query hint:optimizer \"None\" .\n  {\n    ?city wdt:P31 wd:Q7930989 ;\n          wdt:P17 wd:Q159 ;\n          wdt:P764 ?oktmo .\n    BIND(\"p17_russia\" AS ?coverage)\n  } UNION {\n    ?city wdt:P764 ?oktmo .\n    FILTER NOT EXISTS { ?city wdt:P17 wd:Q159 . }\n    ?city wdt:P31/wdt:P279* wd:Q7930989 .\n    BIND(\"oktmo_only\" AS ?coverage)\n  }\n  ?city p:P1082 ?popStmt .\n  ?popStmt ps:P1082 ?pop ;\n           wikibase:rank ?rank .\n  OPTIONAL { ?popStmt pq:P585 ?date . }\n  OPTIONAL { ?popStmt pq:P459 ?method . }\n  SERVICE wikibase:label { bd:serviceParam wikibase:language \"ru,en\". }\n}"
+  "query": "SELECT DISTINCT ?city ?cityLabel ?oktmo ?pop ?date ?rank ?method WHERE {\n  hint:Query hint:optimizer \"None\" .\n  {\n    VALUES ?cls { wd:Q7930989 wd:Q515 wd:Q106389302 wd:Q1549591 wd:Q1637706 wd:Q5123997 }\n    ?st ps:P31 ?cls .\n    ?city p:P31 ?st .\n    FILTER NOT EXISTS { ?st wikibase:rank wikibase:DeprecatedRank . }\n    FILTER NOT EXISTS { ?st pq:P582 ?ended . }\n    FILTER NOT EXISTS {\n      ?st wikibase:rank wikibase:NormalRank .\n      ?city p:P31 ?rst .\n      ?rst wikibase:rank wikibase:PreferredRank ; ps:P31 ?rural .\n      VALUES ?rural { wd:Q532 wd:Q5084 wd:Q2514025 wd:Q2023000 wd:Q748331 wd:Q15078955 wd:Q20019082 }\n    }\n    ?city wdt:P17 wd:Q159 ;\n          wdt:P764 ?oktmo .\n    BIND(\"p17_russia\" AS ?coverage)\n  } UNION {\n    ?city wdt:P764 ?oktmo .\n    FILTER NOT EXISTS { ?city wdt:P17 wd:Q159 . }\n    ?city p:P31/ps:P31/wdt:P279* wd:Q7930989 .\n    BIND(\"oktmo_only\" AS ?coverage)\n  }\n  ?city p:P1082 ?popStmt .\n  ?popStmt ps:P1082 ?pop ;\n           wikibase:rank ?rank .\n  OPTIONAL { ?popStmt pq:P585 ?date . }\n  OPTIONAL { ?popStmt pq:P459 ?method . }\n  SERVICE wikibase:label { bd:serviceParam wikibase:language \"ru,en\". }\n}"
 }
