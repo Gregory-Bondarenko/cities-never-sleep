@@ -12,6 +12,8 @@ import pandas as pd
 
 from citiesneversleep.metrics.trends import log_trend
 from citiesneversleep.paths import CITIES_PROCESSED_DIR, LIGHTS_PROCESSED_DIR, TRENDS_PROCESSED_DIR
+from citiesneversleep.reference.regions import region_of
+from citiesneversleep.story import capitals_summary, region_summary
 
 
 def main() -> None:
@@ -93,12 +95,20 @@ def main() -> None:
     b = t[(t.population_latest > 100_000) & t.lights_class.isin(["растёт", "гаснет"])]
     print(b.sort_values("lights_rel_pct_per_year")[cols].round(3).to_string())
 
-    print("\n## Крым и Севастополь")
-    print(
-        t[t.city_id.isin(cities[cities.coverage == "oktmo_only"].city_id)][cols]
-        .round(3)
-        .to_string()
-    )
+    t["region"] = t["city_id"].map(cities.set_index("city_id")["oktmo"]).map(region_of)
+    crimea = t[t.region.isin(["Республика Крым", "Севастополь"])]
+    print("\n## Крым и Севастополь:", len(crimea), crimea.lights_class.value_counts().to_dict())
+    print(crimea.sort_values("lights_rel_pct_per_year")[cols].round(3).to_string())
+
+    print("\n## Административные центры (story.capitals)")
+    for key, v in capitals_summary(t).items():
+        print(key, {k: x for k, x in v.items() if k != "ids"})
+
+    print("\n## Регионы (не менее 5 городов, без точечных источников)")
+    regs = region_summary(t)
+    print("регионов:", len(regs))
+    for r in regs[:5] + regs[-5:]:
+        print(r["region"], r["n"], f"{r['median_pct'] * 100:+.1f}%")
 
     print("\n## Чувствительность к радиусу (тренды без поправки)")
     rows = []
