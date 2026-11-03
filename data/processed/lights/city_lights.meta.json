@@ -4,9 +4,9 @@
     "VNL V2.1 OpenGeoHub (Zenodo 17294744)",
     "cities/ru_cities"
   ],
-  "built_at": "2026-10-30T09:34:08Z",
-  "package_version": "0.2.0-dev",
-  "n_rows": 13884,
+  "built_at": "2026-11-03T10:29:09Z",
+  "package_version": "0.6.0.dev0",
+  "n_rows": 14534,
   "license_note": "VNL: CC-BY 4.0; Wikidata: CC0",
   "years": [
     2012,
@@ -23,9 +23,9 @@
     2023,
     2024
   ],
-  "n_cities": 1068,
+  "n_cities": 1118,
   "n_flag_nan": 0,
-  "n_flag_near_cap": 51,
+  "n_flag_near_cap": 59,
   "boundary_method": "circle_v1",
   "radius_rule": "r = clip(1,5·√(N/10 000), 3, 30) км, N = population_latest (ADR-0005)",
   "sol_definition": "Σ min(L, cap)·A внутри круга, L в нВт/см²/ср, A площадь пикселя в км²",
