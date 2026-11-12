@@ -1,15 +1,15 @@
 {
-  "schema_version": "1.2.0",
+  "schema_version": "1.3.0",
   "source": [
     "trends/city_trends",
     "lights/city_lights",
     "population",
     "cities"
   ],
-  "built_at": "2026-11-03T10:31:23Z",
+  "built_at": "2026-11-12T10:26:46Z",
   "package_version": "0.6.0.dev0",
   "n_rows": 1118,
   "license_note": "VNL: CC-BY 4.0; Wikidata: CC0",
-  "size_bytes": 843366,
+  "size_bytes": 889675,
   "lights_rel_note": "сумма излучения к индексу децили яркости без региональной составляющей (ADR-0010), среднее города = 1"
 }

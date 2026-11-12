@@ -85,3 +85,17 @@ def test_capitals_summary():
     s = capitals_summary(t)
     assert s["republics"]["n"] == 1 and s["republics"]["up"] == 1
     assert s["other"]["n"] == 2 and s["other"]["down"] == 1  # Новокузнецк не центр
+
+
+def test_ranks_and_rankings():
+    from citiesneversleep.story import display_name, rankings, ranks
+
+    t = _trends()
+    r = ranks(t)
+    assert r.at["c", "rank"] == 1 and r.at["a", "rank"] == 5 and "f" not in r.index
+    assert r.at["a", "rank_region"] == 3 and r.at["a", "n_region"] == 3
+    k = rankings(t)
+    assert k["all"]["up"] == ["c", "e"]  # d исключён как точечный источник
+    assert k["all"]["down"] == ["a"] and k["1m"]["up"] == ["c"] and k["1m"]["down"] == []
+    assert display_name("городской округ Великие Луки") == "Великие Луки"
+    assert display_name("Тверь") == "Тверь"
