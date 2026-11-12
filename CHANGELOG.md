@@ -6,6 +6,10 @@
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-12
+
+Веха «Методика и вовлечение»: проверена ступенька 2021 года, исправлен отбор городов (в выборке 1 118 городов), витрина перестроена вокруг находок и личного сценария.
+
 ### Added
 
 - Витрина, личный сценарий: поиск своего города на первом экране, вердикт одной строкой, закреплённый город отмечен кольцом во всех главах, в каждой главе есть строка о нём; выбор сохраняется в браузере.
@@ -115,7 +119,8 @@
 - `CONTRIBUTING.md`: префиксы веток, Conventional Commits, squash merge, порядок релиза; исправлен путь к `__init__.py`.
 - `README.md`: навигация по документации, значок CI.
 
-[Unreleased]: https://github.com/Gregory-Bondarenko/cities-never-sleep/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/Gregory-Bondarenko/cities-never-sleep/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/Gregory-Bondarenko/cities-never-sleep/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/Gregory-Bondarenko/cities-never-sleep/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/Gregory-Bondarenko/cities-never-sleep/releases/tag/v0.4.0
 [0.3.0]: https://github.com/Gregory-Bondarenko/cities-never-sleep/releases/tag/v0.3.0

@@ -1,3 +1,3 @@
 """Города не спят / Cities Never Sleep — пайплайн ночных огней VIIRS."""
 
-__version__ = "0.6.0.dev0"
+__version__ = "0.6.0"
