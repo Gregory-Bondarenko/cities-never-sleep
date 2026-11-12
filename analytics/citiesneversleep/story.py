@@ -78,9 +78,7 @@ def _ids(df: pd.DataFrame) -> list[str]:
 
 def highlights(trends: pd.DataFrame) -> dict[str, list[str]]:
     """Подборки городов для глав сюжета. Точечные источники исключены."""
-    t = trends[~trends["flag_point_source"].astype(bool)].dropna(
-        subset=["lights_rel_pct_per_year"]
-    )
+    t = trends[~trends["flag_point_source"].astype(bool)].dropna(subset=["lights_rel_pct_per_year"])
     pop = t["population_latest"].fillna(0)
     big = t[pop >= MIN_POP_HIGHLIGHT]
     mid = t[pop >= MIN_POP_QUADRANT]
@@ -91,9 +89,7 @@ def highlights(trends: pd.DataFrame) -> dict[str, list[str]]:
                 "lights_rel_pct_per_year", ascending=False
             )
         ),
-        "fading": _ids(
-            big[big["lights_class"] == "гаснет"].sort_values("lights_rel_pct_per_year")
-        ),
+        "fading": _ids(big[big["lights_class"] == "гаснет"].sort_values("lights_rel_pct_per_year")),
         "fading_with_people": _ids(
             by_pop(mid[(mid["lights_class"] == "гаснет") & (mid["population_class"] == "гаснет")])
         ),
@@ -151,5 +147,55 @@ def capitals_summary(trends: pd.DataFrame) -> dict[str, dict]:
             "point_source": int(g["flag_point_source"].astype(bool).sum()),
             "median_pct": round(float(g["lights_rel_pct_per_year"].median()), 4),
             "ids": g.sort_values("lights_rel_pct_per_year", ascending=False)["city_id"].tolist(),
+        }
+    return out
+
+
+RANKING_GROUPS = {"all": 0, "100k": 100_000, "1m": 1_000_000}
+RANKING_N = 10
+_NAME_PREFIXES = ("городской округ ", "городское поселение ")
+
+
+def display_name(name: str) -> str:
+    """Название для витрины без административной приставки из Wikidata."""
+    for prefix in _NAME_PREFIXES:
+        if name.startswith(prefix):
+            return name[len(prefix) :]
+    return name
+
+
+def ranks(trends: pd.DataFrame) -> pd.DataFrame:
+    """Место города по относительному тренду: в стране и в своём субъекте.
+
+    Место 1 у самого быстрого роста. Города без тренда места не получают.
+    Точечные источники не исключаются, флаг показывается на карточке.
+    """
+    t = trends.dropna(subset=["lights_rel_pct_per_year"])
+    out = pd.DataFrame(index=t["city_id"].to_numpy())
+    out["rank"] = t["lights_rel_pct_per_year"].rank(ascending=False, method="min").to_numpy(int)
+    reg = t.groupby("region", dropna=True)["lights_rel_pct_per_year"]
+    out["rank_region"] = reg.rank(ascending=False, method="min").to_numpy()
+    out["n_region"] = reg.transform("size").to_numpy()
+    return out
+
+
+def rankings(trends: pd.DataFrame) -> dict[str, dict[str, list[str]]]:
+    """Первые RANKING_N светлеющих и гаснущих городов по группам размера.
+
+    В списки входят только значимые тренды (класс «растёт» или «гаснет»)
+    без точечных источников.
+    """
+    t = trends[~trends["flag_point_source"].astype(bool)].dropna(subset=["lights_rel_pct_per_year"])
+    pop = t["population_latest"].fillna(0)
+    out = {}
+    for key, min_pop in RANKING_GROUPS.items():
+        g = t[pop >= min_pop]
+        up = g[g["lights_class"] == "растёт"].sort_values(
+            "lights_rel_pct_per_year", ascending=False
+        )
+        down = g[g["lights_class"] == "гаснет"].sort_values("lights_rel_pct_per_year")
+        out[key] = {
+            "up": up["city_id"].head(RANKING_N).tolist(),
+            "down": down["city_id"].head(RANKING_N).tolist(),
         }
     return out

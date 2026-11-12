@@ -27,12 +27,15 @@ from citiesneversleep.story import (
     capitals_summary,
     cumulative_change,
     decile_percentile,
+    display_name,
     highlights,
     quadrant_counts,
+    rankings,
+    ranks,
     region_summary,
 )
 
-SCHEMA_VERSION = "1.2.0"
+SCHEMA_VERSION = "1.3.0"
 # Пары лет для главы о скачке 2021 года: обычный год и год скачка.
 JUMP_PAIRS = ((2019, 2020), (2020, 2021))
 
@@ -51,6 +54,10 @@ def year_over_year(sol: pd.DataFrame, pairs=JUMP_PAIRS) -> pd.DataFrame:
         ok = (va > 0) & (vb > 0)
         out[f"{a}_{b}"] = np.where(ok, np.log(vb.where(ok) / va.where(ok)), np.nan)
     return pd.DataFrame(out, index=sol.index)
+
+
+def _int(v) -> int | None:
+    return None if pd.isna(v) else int(v)
 
 
 def jump_summary(yoy: pd.DataFrame) -> dict:
@@ -89,6 +96,7 @@ def build_web_export(dest_dir: Path | None = None) -> tuple[Path, dict]:
         .map(region_of)
     )
     pctile = decile_percentile(trends)
+    rk = ranks(trends)
     sol = lights.pivot(index="city_id", columns="year", values="sol").reindex(columns=years)
     pop = (
         population[population["is_primary"] & population["year"].between(years[0], years[-1])]
@@ -104,7 +112,7 @@ def build_web_export(dest_dir: Path | None = None) -> tuple[Path, dict]:
         out_cities.append(
             {
                 "id": cid,
-                "name": r["name"],
+                "name": display_name(r["name"]),
                 "lat": _num(r["lat"], 5),
                 "lon": _num(r["lon"], 5),
                 "population": None
@@ -119,6 +127,9 @@ def build_web_export(dest_dir: Path | None = None) -> tuple[Path, dict]:
                 "population_class": r["population_class"],
                 "population_pct": _num(r["population_pct_per_year"]),
                 "pctile": _num(pctile.get(cid), 3),
+                "rank": int(rk.at[cid, "rank"]) if cid in rk.index else None,
+                "rank_region": _int(rk.at[cid, "rank_region"]) if cid in rk.index else None,
+                "n_region": _int(rk.at[cid, "n_region"]) if cid in rk.index else None,
                 "flags": [
                     name
                     for name, on in (
@@ -153,6 +164,8 @@ def build_web_export(dest_dir: Path | None = None) -> tuple[Path, dict]:
             "jump_pairs": [f"{a}_{b}" for a, b in JUMP_PAIRS],
             "jump": jump_summary(yoy),
             "highlights": highlights(trends),
+            "n_ranked": int(len(rk)),
+            "rankings": rankings(trends),
             "capitals": capitals_summary(trends),
             "quadrants": quadrant_counts(trends),
             "regions": region_summary(trends),
