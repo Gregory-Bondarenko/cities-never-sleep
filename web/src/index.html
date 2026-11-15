@@ -404,11 +404,13 @@ const classColor = c => c.cls===1?COL.led:c.cls===-1?COL.sodium:COL.graphite;
 
 /* --- сцена --- */
 const canvas = document.getElementById("scene");
+/* размеры берутся у холста: ширина окна включает полосу прокрутки, и подписи с кольцом съезжали */
+let VW = canvas.clientWidth || innerWidth, VH = canvas.clientHeight || innerHeight;
 let renderer;
 try { renderer = new THREE.WebGLRenderer({canvas, antialias:true}); }
 catch(e){ document.getElementById("fallback").style.display="block"; }
 const scene = new THREE.Scene(); scene.background = new THREE.Color(0x000000);
-const camera = new THREE.PerspectiveCamera(30, innerWidth/innerHeight, 0.5, 3000);
+const camera = new THREE.PerspectiveCamera(30, VW/VH, 0.5, 3000);
 
 /* ночной снимок как есть, без подкраски */
 let lightmat = null;
@@ -592,9 +594,9 @@ const ggeo = new THREE.BufferGeometry(); ggeo.setAttribute("position", new THREE
 scene.add(new THREE.Points(ggeo, pmat));
 
 /* --- камера: кадры подбираются по размеру содержимого --- */
-const isWide = () => innerWidth >= 900;
+const isWide = () => VW >= 900;
 function frameFor(cx, cz, halfW, halfH, elev){
-  const fov = camera.fov*rad, aspect = innerWidth/innerHeight;
+  const fov = camera.fov*rad, aspect = VW/VH;
   const tanH = Math.tan(fov/2) / (isWide() ? 1 : 1.4);   // на узком экране видна часть увеличенного кадра
   const fracW = isWide() ? .27 : .44, fracH = isWide() ? .40 : .22;
   const dH = halfH/(tanH*fracH*2*Math.sin(elev)), dW = halfW/(tanH*aspect*fracW*2);
@@ -653,7 +655,7 @@ const story = document.getElementById("story");
 const ray = new THREE.Raycaster(); ray.params.Points.threshold = .8;
 const mouse = new THREE.Vector2(), tip = document.getElementById("tip");
 canvas.addEventListener("pointermove", ev => {
-  mouse.set(ev.clientX/innerWidth*2-1, -(ev.clientY/innerHeight)*2+1); ray.setFromCamera(mouse, camera);
+  mouse.set(ev.clientX/VW*2-1, -(ev.clientY/VH)*2+1); ray.setFromCamera(mouse, camera);
   const hit = ray.intersectObject(points).find(h => alpha[h.index] > .2);
   if (hit){ tip.textContent = C[hit.index].name; tip.style.opacity=1; tip.style.transform=`translate(${ev.clientX+14}px,${ev.clientY-30}px)`; canvas.style.cursor="pointer"; }
   else { tip.style.opacity=0; canvas.style.cursor=""; }
@@ -859,8 +861,8 @@ setTargets();
 let t0 = 0;
 function frame(){
   const dt = Math.min(clock.getDelta(), .05); t0 += dt; pmat.uniforms.time.value = t0;
-  progress.style.transform = `scaleX(${Math.min(1, scrollY/Math.max(1, document.documentElement.scrollHeight-innerHeight))})`;
-  if (step==="change"){ const r = story.getBoundingClientRect(); const pr = Math.min(1, Math.max(0, -r.top/(r.height-innerHeight))); const y = Math.round(pr*(NY-1)); if (y!==year){ year=y; setTargets(); } }
+  progress.style.transform = `scaleX(${Math.min(1, scrollY/Math.max(1, document.documentElement.scrollHeight-VH))})`;
+  if (step==="change"){ const r = story.getBoundingClientRect(); const pr = Math.min(1, Math.max(0, -r.top/(r.height-VH))); const y = Math.round(pr*(NY-1)); if (y!==year){ year=y; setTargets(); } }
   yearEl.textContent = YEARS[Math.round(year)];
   const k = reduce ? 1 : 1-Math.pow(.02, dt);
   const appear = reduce ? 1 : Math.min(1, t0/2.2);
@@ -873,8 +875,6 @@ function frame(){
   pgeo.attributes.position.needsUpdate = pgeo.attributes.color.needsUpdate = pgeo.attributes.size.needsUpdate = pgeo.attributes.alpha.needsUpdate = true;
   ggeo.attributes.alpha.needsUpdate = true;
   const mapLayer = (step==="jump"||step==="people"||step==="millions") ? 0 : (step==="intro" ? .85 : step==="regions" ? .25 : .5);
-  if (me!==null && alpha[me] > .3){ v3.set(pos[me*3], .05, pos[me*3+2]).project(camera);
-    pinEl.style.opacity = v3.z < 1 ? 1 : 0; pinEl.style.transform = `translate(${(v3.x*.5+.5)*innerWidth}px,${(-v3.y*.5+.5)*innerHeight}px)`; } else pinEl.style.opacity = 0;
   if (lightmat) lightmat.opacity += (mapLayer*appear - lightmat.opacity)*k;
   cmat.opacity += ((mapLayer>0 ? .9 : 0) - cmat.opacity)*k;
   for (const [name,g] of Object.entries(chartGroups)) g.userData.mat.opacity += (((g.userData.step||name)===step ? 1 : 0) - g.userData.mat.opacity)*k;
@@ -887,8 +887,11 @@ function frame(){
     if (step==="explore") controls.target.copy(camLook);
   } else { controls.update(); camPos.copy(camera.position); camLook.copy(controls.target); }
   camera.updateMatrixWorld();
+  /* кольцо считается после обновления камеры, иначе отстаёт на кадр, пока камера летит */
+  if (me!==null && alpha[me] > .3){ v3.set(pos[me*3], .05, pos[me*3+2]).project(camera);
+    pinEl.style.opacity = v3.z < 1 ? 1 : 0; pinEl.style.transform = `translate(${((v3.x*.5+.5)*VW).toFixed(1)}px,${((-v3.y*.5+.5)*VH).toFixed(1)}px)`; } else pinEl.style.opacity = 0;
 
-  const placed = [], leftEdge = isWide() && !["jump","people","millions"].includes(step) ? innerWidth*.44 : 0;
+  const placed = [], leftEdge = isWide() && !["jump","people","millions"].includes(step) ? VW*.44 : 0;
   if (me!==null && pinEl.style.opacity==="1"){ const m = pinEl.style.transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px/); if (m) placed.push({x:+m[1]-16, y:+m[2]-14, w:pinEl.lastChild.offsetWidth+40, h:28}); }
   const order = LABELS.slice().sort((a,b)=>b.prio-a.prio);
   for (const L of order){
@@ -897,7 +900,7 @@ function frame(){
     v3.set(L.x, .05, L.z).project(camera);
     if (v3.z > 1){ L.el.style.opacity = 0; continue; }
     if (!L.w){ L.w = L.el.offsetWidth; L.h = L.el.offsetHeight; }
-    const px = (v3.x*.5+.5)*innerWidth, py = (-v3.y*.5+.5)*innerHeight;
+    const px = (v3.x*.5+.5)*VW, py = (-v3.y*.5+.5)*VH;
     const dx = L.align==="left" ? 10 : L.align==="right" ? -L.w - 6 : -L.w/2;
     const r = {x:px+dx, y:py-8, w:L.w, h:L.h};
     const isCity = L.el.classList.contains("city") || (L.el.classList.contains("big") && step!=="jump");
@@ -909,12 +912,13 @@ function frame(){
   renderer.render(scene, camera); requestAnimationFrame(frame);
 }
 function resize(){
-  renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.setSize(innerWidth, innerHeight, false);
-  camera.aspect = innerWidth/innerHeight;
+  VW = canvas.clientWidth || innerWidth; VH = canvas.clientHeight || innerHeight;
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.setSize(VW, VH, false);
+  camera.aspect = VW/VH;
   // точка интереса: справа от текста на широком экране, в верхней трети на узком
-  if (isWide()) camera.setViewOffset(innerWidth*1.34, innerHeight, 0, 0, innerWidth, innerHeight);
-  else camera.setViewOffset(innerWidth*1.4, innerHeight*1.4, innerWidth*.2, innerHeight*.4, innerWidth, innerHeight);
-  camera.updateProjectionMatrix(); pmat.uniforms.scale.value = innerHeight*renderer.getPixelRatio()*.55;
+  if (isWide()) camera.setViewOffset(VW*1.34, VH, 0, 0, VW, VH);
+  else camera.setViewOffset(VW*1.4, VH*1.4, VW*.2, VH*.4, VW, VH);
+  camera.updateProjectionMatrix(); pmat.uniforms.scale.value = VH*renderer.getPixelRatio()*.55;
 }
 addEventListener("resize", resize);
 if (renderer){ resize(); requestAnimationFrame(frame); }
