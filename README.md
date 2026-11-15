@@ -6,7 +6,7 @@
 
 Основа продукта: воспроизводимый исследовательский конвейер. Сайт на GitHub Pages служит витриной поверх готовых артефактов: <https://gregory-bondarenko.ru/cities-never-sleep/>.
 
-**Версия:** `1.0.0.dev0`. Статус вех и план: [docs/roadmap.md](docs/roadmap.md).
+**Версия:** `0.7.0.dev0`. Статус вех и план: [docs/roadmap.md](docs/roadmap.md).
 
 ## Как устроено
 
@@ -39,7 +39,14 @@ uv run cns fetch-vnl --year 2013
 uv run cns process-vnl --year 2013
 ```
 
-Те же действия через Make: `make install`, `make fetch-pop`, `make fetch-vnl YEARS=2013`, `make process VNL_YEAR=2013`.
+Полный прогон одной командой:
+
+```bash
+make all      # с нуля: Wikidata, VNL с Zenodo за 2012–2024, тренды, выгрузки, сайт в web/dist
+make derive   # без сети: тренды, выгрузка и сайт из закоммиченных data/processed
+```
+
+`make all` проверяется на чистой машине workflow `reproduce` (запуск вручную). Отдельные шаги: `make fetch-pop`, `make rasters YEARS=2013`, `make lights`, `make trends`, `make export`, `make site`.
 
 ## Структура
 
